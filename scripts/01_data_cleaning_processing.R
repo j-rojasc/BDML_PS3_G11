@@ -74,7 +74,7 @@ stargazer(train['precio_m2'], type = 'text') # valores mínimos y máximos irrea
 
 hist(train$precio_m2)
 
-# change outliers
+# work with outliers
 
 p1 <- train %>% 
   ggplot(aes(y = precio_m2)) +
@@ -94,4 +94,23 @@ p2 <- train %>%
        y = 'Precio por metro cuadrado (millones)', x = '') +
   theme_minimal()
 grid.arrange(p1, p2, ncol = 2)
+
+train <- train %>% 
+  filter(between(precio_m2, perc1, up))
+
+plot_price <- ggplot(train, aes(x = log10(price))) +
+  geom_histogram(binwidth = 0.05, fill = 'darkblue', alpha = 0.4) +
+  scale_x_continuous(labels = function(x) scales::dollar(10^x, accuracy = 1),
+                     name = 'Valor de venta (pesos reales, escala log)') +
+  labs(y = 'Cantidad') +
+  theme_minimal()
+ggplotly(plot_price)
+
+# create a base map
+
+leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = train$lon,
+             lat = train$lat)
+
 
