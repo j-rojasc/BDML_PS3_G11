@@ -106,11 +106,17 @@ plot_price <- ggplot(train, aes(x = log10(price))) +
   theme_minimal()
 ggplotly(plot_price)
 
-# create a base map
 
-leaflet() %>% 
-  addTiles() %>% 
-  addCircles(lng = train$lon,
-             lat = train$lat)
+
+
+
+
+
+
+
+
+
+
+
 
 
