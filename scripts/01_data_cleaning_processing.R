@@ -158,13 +158,28 @@ leaflet() %>%
              radius = train$precio_m2_sc*10,
              popup = html)
 
-
-
 # transform data to sf
-sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4626)
+sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
 
 # =========================================================
-# 3. Extracting spatial data from OSM
+# 4. Adding data of localidades
+# =========================================================
+
+localidades <- st_read(file.path(dir$raw, "poligonos-localidades.geojson"))
+localidades <- st_transform(localidades, 4626)
+
+ggplot() +
+  geom_sf(data = localidades %>% 
+            filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
+                                                   'USME',
+                                                   'CIUDAD BOLIVAR'))), 
+          color = 'orange') +
+  geom_sf(data = sf_train, aes(color = precio_m2), shape = 15, size = 0.3) +
+  theme_minimal()
+# hay varias localidades con cero o pocas observaciones!!
+
+# =========================================================
+# 5. Extracting spatial data from OSM
 # =========================================================
 
 # check categories of available spatial data
@@ -190,7 +205,24 @@ centroides <- centroides %>%
   mutate(x = st_coordinates(centroides)[, 'X']) %>% 
   mutate(y = st_coordinates(centroides)[, 'Y'])
 
+centroides_sf <- st_as_sf(centroides, coords = c('x', 'y'), crs = 4326)
 
+# calculate distances between each property and nearest park
+dist_matrix <- st_distance(x = sf_train, y = centroides_sf)
+dim(dist_matrix)
 
+# find min distance to any park for each property
+dist_min <- apply(dist_matrix, 1, min)
+train <- train %>%
+  mutate(distancia_parque = dist_min)
+
+# check distribution 
+plot_parks <- ggplot(train, aes(x = distancia_parque)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un parque en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a los parques') +
+  theme_minimal()
+ggplotly(plot_parks)
 
 
