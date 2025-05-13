@@ -225,4 +225,41 @@ plot_parks <- ggplot(train, aes(x = distancia_parque)) +
   theme_minimal()
 ggplotly(plot_parks)
 
+# ===============================================================
+# 6. Checking the relationship between price and parks
+# ===============================================================
+
+# distance to parks
+price_parks <- ggplot(train %>% sample_n(1000), aes(x = distancia_parque,
+                                                    y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un parque en metros (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre la proximidad a un parque y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_parks)
+
+# park area
+posicion <- apply(dist_matrix, 1, function(x) which(min(x) == x))
+areas <- st_area(parques_geom)
+train <- train %>% 
+  mutate(area_parque = as.numeric(areas[posicion]))
+
+price_aparks <- ggplot(train %>% sample_n(1000), aes(x = area_parque,
+                                                    y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Área del parque más cercano (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre área de un parque y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_aparks)
+
+
+
+
+
 
