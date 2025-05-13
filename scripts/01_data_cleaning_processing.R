@@ -45,3 +45,53 @@ train %>%
 train %>% 
   count(bathrooms) # find mode for bathrooms
 
+median_totalsur <- median(train$surface_total, na.rm = T) # calculate median for surfaces
+median_coveredsur <- median(train$surface_covered, na.rm = T)
+
+# input missing data
+
+train <- train %>% 
+  mutate(rooms = replace_na(rooms, 3),
+         bathrooms = replace_na(bathrooms, 2),
+         surface_total = replace_na(surface_total, median_totalsur),
+         surface_covered = replace_na(surface_covered, median_coveredsur))
+
+colSums(sapply(train, is.na)) > 0
+vis_dat(train)
+
+# check distribution of numeric variables
+
+stargazer(train, type = 'text')
+# valores raros en surface covered 2 m2, 0 bedrooms. Limpieza de estos datos según descripción.
+
+# calculate price per m2
+
+train <- train %>% 
+  mutate(precio_m2 = round(price / surface_total, 0)) %>% 
+  mutate(precio_m2 = precio_m2 / 1000000)
+
+stargazer(train['precio_m2'], type = 'text') # valores mínimos y máximos irreales
+
+hist(train$precio_m2)
+
+# change outliers
+
+p1 <- train %>% 
+  ggplot(aes(y = precio_m2)) +
+  geom_boxplot(fill = 'darkblue', alpha = 0.4) +
+  labs(title = 'Muestra Completa',
+       y = 'Precio por metro cuadrado (millones)', x = '') +
+  theme_minimal()
+
+perc1 <- unname(round(quantile(train$precio_m2, probs = c(0.01)), 2))
+up <- round(mean(train$precio_m2) + 2*sd(train$precio_m2))
+
+p2 <- train %>% 
+  filter(between(precio_m2, perc1, up)) %>% 
+  ggplot(aes(y = precio_m2)) +
+  geom_boxplot(fill = 'darkblue', alpha = 0.4) +
+  labs(title = 'Muestra Filtrada',
+       y = 'Precio por metro cuadrado (millones)', x = '') +
+  theme_minimal()
+grid.arrange(p1, p2, ncol = 2)
+
