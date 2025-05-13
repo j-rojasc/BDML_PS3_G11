@@ -259,6 +259,7 @@ price_aparks <- ggplot(train %>% sample_n(1000), aes(x = area_parque,
 ggplotly(price_aparks)
 
 
+## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
 
 
 
