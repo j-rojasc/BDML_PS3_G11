@@ -25,6 +25,10 @@ source(file.path(dir$scripts, "00_load_requirements.R"))
 train <- read.csv(file.path(dir$raw, "train.csv"))
 test <- read.csv(file.path(dir$raw, "test.csv"))
 
+# =========================================================
+# 1. Exploring and cleaning data (NAs, outliers)
+# =========================================================
+
 dim(train) # check dimensions
 table(train$operation_type) # check operation type - all venta
 
@@ -106,15 +110,85 @@ plot_price <- ggplot(train, aes(x = log10(price))) +
   theme_minimal()
 ggplotly(plot_price)
 
+# =========================================================
+# 2. Mapping train data
+# =========================================================
+
+leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = train$lon,
+             lat = train$lat)
+
+limites <- getbb('Bogota Colombia')
+train <- train %>% 
+  filter(between(lon, limites[1, 'min'], limites[1, 'max']) &
+           between(lat, limites[2, 'min'], limites[2, 'max'])
+         )
+
+train <- train %>% 
+  mutate(precio_m2_sc = ((precio_por_mt2 - min(precio_por_mt2)) / 
+                           (max(precio_por_mt2) - min(precio_por_mt2))))
+
+train <- train %>% 
+  mutate(color = case_when(property_type == 'Apartamento' ~ 'red',
+                           property_type == 'Casa' ~ 'blue'))
+
+html <- paste0("<b>Precio:</b> ",
+               scales::dollar(train$price),
+               "<br> <b>Area:</b> ",
+               as.integer(train$surface_total), " mt2",
+               "<br> <b>Tipo de immueble:</b> ",
+               train$property_type,
+               "<br> <b>Numero de alcobas:</b> ",
+               as.integer(train$bedrooms),
+               "<br> <b>Numero de baños:</b> ",
+               as.integer(train$bathrooms))
+
+lat_central <- mean(train$lat)
+lon_central <- mean(train$lon)
+
+leaflet() %>% 
+  addTiles() %>% 
+  setView(lng = lon_central, lat = lat_central, zoom = 11) %>% 
+  addCircles(lng = train$lon,
+             lat = train$lat,
+             col = train$color,
+             fillOpacity = 1,
+             opacity = 1,
+             radius = train$precio_m2_sc*10,
+             popup = html)
 
 
 
+# transform data to sf
+sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4626)
 
+# =========================================================
+# 3. Extracting spatial data from OSM
+# =========================================================
 
+# check categories of available spatial data
+osmdata::available_features()
+leisure <- osmdata::available_tags('leisure')
+print(leisure, n=33)
 
+# extract info of parks
+parques <- opq(bbox = getbb('Bogota Colombia')) %>% 
+  add_osm_feature(key = 'leisure', value = 'park')
 
+# transform parks data into sf
+parques_sf <- osmdata_sf(parques)
 
+# select polygons and save them
+parques_geom <- parques_sf$osm_polygons %>% 
+  dplyr::select(osm_id, name)
+parques_geom <- st_as_sf(parques_sf$osm_polygons)
 
+# calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
+centroides <- st_centroid(parques_geom, byid = T)
+centroides <- centroides %>% 
+  mutate(x = st_coordinates(centroides)[, 'X']) %>% 
+  mutate(y = st_coordinates(centroides)[, 'Y'])
 
 
 
