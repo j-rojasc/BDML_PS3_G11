@@ -26,7 +26,7 @@ train <- read.csv(file.path(dir$raw, "train.csv"))
 test <- read.csv(file.path(dir$raw, "test.csv"))
 
 # =========================================================
-# 1. Exploring and cleaning data (NAs, outliers)
+# 1. Exploring and cleaning train data (NAs, outliers)
 # =========================================================
 
 dim(train) # check dimensions
@@ -111,7 +111,47 @@ plot_price <- ggplot(train, aes(x = log10(price))) +
 ggplotly(plot_price)
 
 # =========================================================
-# 2. Mapping train data
+# 2. Exploring and cleaning test data (NAs, outliers)
+# =========================================================
+
+dim(test) # check dimensions
+table(test$operation_type) # check operation type - all venta
+
+test %>%
+  count(property_type) # check types of properties
+
+test <- test %>% dplyr:: select(-constant_vars)
+dim(test)
+
+colSums(sapply(test, is.na)) > 0
+
+vis_dat(test) # check missing values
+
+test %>% 
+  count(rooms) # find mode for rooms
+
+test %>% 
+  count(bathrooms) # find mode for bathrooms
+
+median_totalsur_test <- median(test$surface_total, na.rm = T) # calculate median for surfaces
+median_coveredsur_test <- median(test$surface_covered, na.rm = T)
+
+# input missing data
+
+test <- test %>% 
+  mutate(rooms = replace_na(rooms, 3),
+         bathrooms = replace_na(bathrooms, 2),
+         surface_total = replace_na(surface_total, median_totalsur_test),
+         surface_covered = replace_na(surface_covered, median_coveredsur_test))
+
+colSums(sapply(test, is.na)) > 0
+vis_dat(test)
+
+# check distribution of numeric variables
+stargazer(test, type = 'text') # valores raros en surface total 15 m2 y 108,800 m2, 0 bedrooms.
+
+# =========================================================
+# 3. Mapping train data
 # =========================================================
 
 leaflet() %>% 
@@ -162,7 +202,50 @@ leaflet() %>%
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
 
 # =========================================================
-# 4. Adding data of localidades
+# 4. Mapping test data
+# =========================================================
+
+leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = test$lon,
+             lat = test$lat)
+
+test <- test %>% 
+  filter(between(lon, limites[1, 'min'], limites[1, 'max']) &
+           between(lat, limites[2, 'min'], limites[2, 'max'])
+  )
+
+test <- test %>% 
+  mutate(color = case_when(property_type == 'Apartamento' ~ 'red',
+                           property_type == 'Casa' ~ 'blue'))
+
+html_test <- paste0("<br> <b>Area:</b> ",
+               as.integer(train$surface_total), " mt2",
+               "<br> <b>Tipo de immueble:</b> ",
+               train$property_type,
+               "<br> <b>Numero de alcobas:</b> ",
+               as.integer(train$bedrooms),
+               "<br> <b>Numero de baños:</b> ",
+               as.integer(train$bathrooms))
+
+lat_central_test <- mean(test$lat)
+lon_central_test <- mean(test$lon)
+
+leaflet() %>% 
+  addTiles() %>% 
+  setView(lng = lon_central_test, lat = lat_central_test, zoom = 11) %>% 
+  addCircles(lng = test$lon,
+             lat = test$lat,
+             col = test$color,
+             fillOpacity = 1,
+             opacity = 1,
+             popup = html_test)
+
+# transform data to sf
+sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
+
+# =========================================================
+# 5. Adding data of localidades
 # =========================================================
 
 localidades <- st_read(file.path(dir$raw, "poligonos-localidades.geojson"))
@@ -176,10 +259,14 @@ ggplot() +
           color = 'orange') +
   geom_sf(data = sf_train, aes(color = precio_m2), shape = 15, size = 0.3) +
   theme_minimal()
-# hay varias localidades con cero o pocas observaciones!!
+
+ggplot() +
+  geom_sf(data = localidades, color = 'orange') +
+  geom_sf(data = sf_test, color = 'blue', shape = 15, size = 0.3) +
+  theme_minimal()
 
 # =========================================================
-# 5. Extracting spatial data from OSM
+# 6. Extracting spatial data from OSM
 # =========================================================
 
 # check categories of available spatial data
@@ -226,7 +313,7 @@ plot_parks <- ggplot(train, aes(x = distancia_parque)) +
 ggplotly(plot_parks)
 
 # ===============================================================
-# 6. Checking the relationship between price and parks
+# 7. Checking the relationship between price and parks
 # ===============================================================
 
 # distance to parks
