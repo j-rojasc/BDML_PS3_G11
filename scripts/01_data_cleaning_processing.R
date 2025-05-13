@@ -269,6 +269,8 @@ ggplot() +
 # 6. Extracting spatial data from OSM
 # =========================================================
 
+# ===================== parks =============================
+
 # check categories of available spatial data
 osmdata::available_features()
 leisure <- osmdata::available_tags('leisure')
@@ -311,6 +313,13 @@ plot_parks <- ggplot(train, aes(x = distancia_parque)) +
        title = 'Distribución de la distancia a los parques') +
   theme_minimal()
 ggplotly(plot_parks)
+
+# =================== public transport ====================
+
+# =================== universities ========================
+
+# ==================== estrato ============================
+
 
 # ===============================================================
 # 7. Checking the relationship between price and parks
