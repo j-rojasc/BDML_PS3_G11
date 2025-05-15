@@ -410,10 +410,10 @@ ggplotly(plot_malls)
 
 amenity <- osmdata::available_tags('amenity')
 print(amenity, n=137)
- 
-# extract info
+
+# extract info of universities
 unis <- opq(bbox = getbb('Bogota Colombia')) %>%
-  add_osm_feature(key = 'amenity', value = 'university')
+  add_osm_feature(key = 'amenity', value = 'university') 
 
 # transform data into sf
 unis_sf <- osmdata_sf(unis)
@@ -441,7 +441,7 @@ train <- train %>%
   mutate(distancia_unis = dist_min_unis)
 
 # check distribution
-plot_unis <- ggplot(train, aes(x = distancia_unis)) +
+plot_unis <- ggplot(train, aes(x = distancia_university)) +
   geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
   labs(x = 'Distancia mínima a una universidad en metros',
        y = 'Cantidad',
@@ -534,16 +534,35 @@ price_amalls <- ggplot(train %>% sample_n(1000), aes(x = area_mall,
 ggplotly(price_amalls)
 
 # ===============================================================
-# 10. Checking the relationship between price and univeristies
+# 10. Checking the relationship between price and universities
 # ===============================================================
 
-# distance to public transport stations
+# distance
 price_unis <- ggplot(train %>% sample_n(1000), aes(x = distancia_unis,
                                                        y = price)) +
   geom_point(col = 'darkblue', alpha = 0.4) +
   labs(x = 'Distancia mínima a una universidad en metros (log-scale)',
        y = 'Valor de venta (log-scale)',
        title = 'Relación entre la proximidad a una universidad y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_unis)
+
+# area
+posicion_unis <- apply(dist_matrix_unis, 1, function(x) which(min(x) == x))
+
+areas1 <- st_area(unis_geom)
+train <- train %>% 
+  mutate(area_unis = as.numeric(areas1[posicion_unis]))
+
+
+price_unis <- ggplot(train %>% sample_n(1000), aes(x = area_unis,
+                                                     y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Área de la universidad más cercano (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre área de una universidad y el precio del inmueble') +
   scale_x_log10() +
   scale_y_log10(labels = scales::dollar) +
   theme_minimal()
