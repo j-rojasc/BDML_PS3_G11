@@ -423,7 +423,7 @@ unis_geom <- unis_sf$osm_polygons %>%
   dplyr::select(osm_id, name)
 unis_geom <- st_as_sf(unis_sf$osm_polygons)
 
-# calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
+# calculate each university's centroid 
 centroides <- st_centroid(unis_geom, byid = T)
 centroides <- centroides %>%
   mutate(x = st_coordinates(centroides)[, 'X']) %>%
@@ -432,11 +432,11 @@ centroides <- centroides %>%
 centroides_sf <- st_as_sf(centroides, coords = c('x', 'y'), crs = 4326)
 
 # calculate distances between each property and nearest university
-dist_matrix <- st_distance(x = sf_train, y = centroides_sf)
+dist_matrix_unis <- st_distance(x = sf_train, y = centroides_sf)
 dim(dist_matrix)
 
 # find min distance to any park for each property
-dist_min <- apply(dist_matrix, 1, min)
+dist_min <- apply(dist_matrix_unis, 1, min)
 train <- train %>%
   mutate(distancia_university = dist_min)
 
@@ -532,6 +532,42 @@ price_amalls <- ggplot(train %>% sample_n(1000), aes(x = area_mall,
   scale_y_log10(labels = scales::dollar) +
   theme_minimal()
 ggplotly(price_amalls)
+
+
+# ===============================================================
+# 10. Checking the relationship between price and university
+# ===============================================================
+
+# distance
+price_unis <- ggplot(train %>% sample_n(1000), aes(x = distancia_university,
+                                                    y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una universidad  en metros (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre la proximidad a una universidad y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_unis)
+
+# area
+posicion_unis <- apply(dist_matrix_unis, 1, function(x) which(min(x) == x))
+
+areas1 <- st_area(unis_geom)
+train <- train %>% 
+  mutate(area_unis = as.numeric(areas1[posicion_unis]))
+
+
+price_unis <- ggplot(train %>% sample_n(1000), aes(x = area_unis,
+                                                     y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Área de la universidad más cercano (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre área de una universidad y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_unis)
 
 ## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
 
