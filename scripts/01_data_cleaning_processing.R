@@ -408,46 +408,46 @@ ggplotly(plot_malls)
 
 # ==================== universities ============================
 
-# amenity <- osmdata::available_tags('amenity')
-# print(amenity)
-# 
-# # extract info of parks
-# unis <- opq(bbox = getbb('Bogota Colombia')) %>% 
-#   add_osm_feature(key = 'leisure', value = 'park')
-# 
-# # transform parks data into sf
-# parques_sf <- osmdata_sf(parques)
-# 
-# # select polygons and save them
-# parques_geom <- parques_sf$osm_polygons %>% 
-#   dplyr::select(osm_id, name)
-# parques_geom <- st_as_sf(parques_sf$osm_polygons)
-# 
-# # calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
-# centroides <- st_centroid(parques_geom, byid = T)
-# centroides <- centroides %>% 
-#   mutate(x = st_coordinates(centroides)[, 'X']) %>% 
-#   mutate(y = st_coordinates(centroides)[, 'Y'])
-# 
-# centroides_sf <- st_as_sf(centroides, coords = c('x', 'y'), crs = 4326)
-# 
-# # calculate distances between each property and nearest park
-# dist_matrix <- st_distance(x = sf_train, y = centroides_sf)
-# dim(dist_matrix)
-# 
-# # find min distance to any park for each property
-# dist_min <- apply(dist_matrix, 1, min)
-# train <- train %>%
-#   mutate(distancia_parque = dist_min)
-# 
-# # check distribution 
-# plot_parks <- ggplot(train, aes(x = distancia_parque)) +
-#   geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
-#   labs(x = 'Distancia mínima a un parque en metros',
-#        y = 'Cantidad',
-#        title = 'Distribución de la distancia a los parques') +
-#   theme_minimal()
-# ggplotly(plot_parks)
+amenity <- osmdata::available_tags('amenity')
+print(amenity)
+
+# extract info of univesities
+unis <- opq(bbox = getbb('Bogota Colombia')) %>%
+  add_osm_feature(key = 'amenity', value = 'university') 
+
+# transform parks data into sf
+unis_sf <- osmdata_sf(unis)
+
+# select polygons and save them
+unis_geom <- unis_sf$osm_polygons %>%
+  dplyr::select(osm_id, name)
+unis_geom <- st_as_sf(unis_sf$osm_polygons)
+
+# calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
+centroides <- st_centroid(unis_geom, byid = T)
+centroides <- centroides %>%
+  mutate(x = st_coordinates(centroides)[, 'X']) %>%
+  mutate(y = st_coordinates(centroides)[, 'Y'])
+
+centroides_sf <- st_as_sf(centroides, coords = c('x', 'y'), crs = 4326)
+
+# calculate distances between each property and nearest university
+dist_matrix <- st_distance(x = sf_train, y = centroides_sf)
+dim(dist_matrix)
+
+# find min distance to any park for each property
+dist_min <- apply(dist_matrix, 1, min)
+train <- train %>%
+  mutate(distancia_university = dist_min)
+
+# check distribution
+plot_unis <- ggplot(train, aes(x = distancia_university)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una universidad en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a las universidades') +
+  theme_minimal()
+ggplotly(plot_unis)
 
 # ===============================================================
 # 7. Checking the relationship between price and parks
