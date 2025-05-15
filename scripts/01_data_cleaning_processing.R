@@ -408,46 +408,46 @@ ggplotly(plot_malls)
 
 # ==================== universities ============================
 
-# amenity <- osmdata::available_tags('amenity')
-# print(amenity)
-# 
-# # extract info of parks
-# unis <- opq(bbox = getbb('Bogota Colombia')) %>% 
-#   add_osm_feature(key = 'leisure', value = 'park')
-# 
-# # transform parks data into sf
-# parques_sf <- osmdata_sf(parques)
-# 
-# # select polygons and save them
-# parques_geom <- parques_sf$osm_polygons %>% 
-#   dplyr::select(osm_id, name)
-# parques_geom <- st_as_sf(parques_sf$osm_polygons)
-# 
-# # calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
-# centroides <- st_centroid(parques_geom, byid = T)
-# centroides <- centroides %>% 
-#   mutate(x = st_coordinates(centroides)[, 'X']) %>% 
-#   mutate(y = st_coordinates(centroides)[, 'Y'])
-# 
-# centroides_sf <- st_as_sf(centroides, coords = c('x', 'y'), crs = 4326)
-# 
-# # calculate distances between each property and nearest park
-# dist_matrix <- st_distance(x = sf_train, y = centroides_sf)
-# dim(dist_matrix)
-# 
-# # find min distance to any park for each property
-# dist_min <- apply(dist_matrix, 1, min)
-# train <- train %>%
-#   mutate(distancia_parque = dist_min)
-# 
-# # check distribution 
-# plot_parks <- ggplot(train, aes(x = distancia_parque)) +
-#   geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
-#   labs(x = 'Distancia mínima a un parque en metros',
-#        y = 'Cantidad',
-#        title = 'Distribución de la distancia a los parques') +
-#   theme_minimal()
-# ggplotly(plot_parks)
+amenity <- osmdata::available_tags('amenity')
+print(amenity, n=137)
+ 
+# extract info
+unis <- opq(bbox = getbb('Bogota Colombia')) %>%
+  add_osm_feature(key = 'amenity', value = 'university')
+
+# transform data into sf
+unis_sf <- osmdata_sf(unis)
+
+# select polygons and save them
+unis_geom <- unis_sf$osm_polygons %>%
+  dplyr::select(osm_id, name)
+unis_geom <- st_as_sf(unis_sf$osm_polygons)
+
+# calculate each centroid (queremos trabajar con centroides u otra cosa?)
+centroides_unis <- st_centroid(unis_geom, byid = T)
+centroides_unis <- centroides_unis %>%
+  mutate(x = st_coordinates(centroides_unis)[, 'X']) %>%
+  mutate(y = st_coordinates(centroides_unis)[, 'Y'])
+
+centroides_uni_sf <- st_as_sf(centroides_unis, coords = c('x', 'y'), crs = 4326)
+
+# calculate distances between each property and nearest university
+dist_matrix_unis <- st_distance(x = sf_train, y = centroides_uni_sf)
+dim(dist_matrix_unis)
+
+# find min distance to any park for each property
+dist_min_unis <- apply(dist_matrix_unis, 1, min)
+train <- train %>%
+  mutate(distancia_unis = dist_min_unis)
+
+# check distribution
+plot_unis <- ggplot(train, aes(x = distancia_unis)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una universidad en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a las universidades') +
+  theme_minimal()
+ggplotly(plot_unis)
 
 # ===============================================================
 # 7. Checking the relationship between price and parks
@@ -532,6 +532,22 @@ price_amalls <- ggplot(train %>% sample_n(1000), aes(x = area_mall,
   scale_y_log10(labels = scales::dollar) +
   theme_minimal()
 ggplotly(price_amalls)
+
+# ===============================================================
+# 10. Checking the relationship between price and univeristies
+# ===============================================================
+
+# distance to public transport stations
+price_unis <- ggplot(train %>% sample_n(1000), aes(x = distancia_unis,
+                                                       y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una universidad en metros (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre la proximidad a una universidad y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_unis)
 
 ## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
 
