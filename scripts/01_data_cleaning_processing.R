@@ -166,8 +166,8 @@ train <- train %>%
          )
 
 train <- train %>% 
-  mutate(precio_m2_sc = ((precio_por_mt2 - min(precio_por_mt2)) / 
-                           (max(precio_por_mt2) - min(precio_por_mt2))))
+  mutate(precio_m2_sc = ((precio_m2 - min(precio_m2)) / 
+                           (max(precio_m2) - min(precio_m2))))
 
 train <- train %>% 
   mutate(color = case_when(property_type == 'Apartamento' ~ 'red',
@@ -316,7 +316,50 @@ ggplotly(plot_parks)
 
 # =================== public transport ====================
 
+ptransport <- osmdata::available_tags('public_transport')
+print(ptransport)
+
+# extract info of parks
+estaciones <- opq(bbox = getbb('Bogota Colombia')) %>% 
+  add_osm_feature(key = 'public_transport', value = 'station')
+
+# transform parks data into sf
+estaciones_sf <- osmdata_sf(estaciones)
+
+# select polygons and save them
+estaciones_geom <- estaciones_sf$osm_polygons %>% 
+  dplyr::select(osm_id, name)
+estaciones_geom <- st_as_sf(estaciones_sf$osm_polygons)
+
+# calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
+centroides_pt <- st_centroid(estaciones_geom, byid = T)
+centroides_pt <- centroides_pt %>% 
+  mutate(x = st_coordinates(centroides_pt)[, 'X']) %>% 
+  mutate(y = st_coordinates(centroides_pt)[, 'Y'])
+
+centroides_pt_sf <- st_as_sf(centroides_pt, coords = c('x', 'y'), crs = 4326)
+
+# calculate distances between each property and nearest park
+dist_matrix_pt <- st_distance(x = sf_train, y = centroides_pt_sf)
+dim(dist_matrix_pt)
+
+# find min distance to any park for each property
+dist_min_pt <- apply(dist_matrix_pt, 1, min)
+train <- train %>%
+  mutate(distancia_estaciones = dist_min_pt)
+
+# check distribution 
+plot_estaciones <- ggplot(train, aes(x = distancia_estaciones)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una estación de transporte público en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a las estaciones') +
+  theme_minimal()
+ggplotly(plot_estaciones)
+
 # =================== universities ========================
+
+osmdata::available_tags('public_transport')
 
 # ==================== estrato ============================
 
@@ -353,6 +396,22 @@ price_aparks <- ggplot(train %>% sample_n(1000), aes(x = area_parque,
   scale_y_log10(labels = scales::dollar) +
   theme_minimal()
 ggplotly(price_aparks)
+
+# ===============================================================
+# 8. Checking the relationship between price and stations
+# ===============================================================
+
+# distance to public transport stations
+price_stations <- ggplot(train %>% sample_n(1000), aes(x = distancia_estaciones,
+                                                    y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una estación de transporte público en metros (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre la proximidad a una estación y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_stations)
 
 
 ## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
