@@ -319,19 +319,19 @@ ggplotly(plot_parks)
 ptransport <- osmdata::available_tags('public_transport')
 print(ptransport)
 
-# extract info of parks
-estaciones <- opq(bbox = getbb('Bogota Colombia')) %>% 
-  add_osm_feature(key = 'public_transport', value = 'station')
+# extract info
+estaciones <- opq(bbox = getbb('Bogota Colombia')) %>%
+add_osm_feature(key = 'public_transport', value = 'station')
 
-# transform parks data into sf
+# transform data into sf
 estaciones_sf <- osmdata_sf(estaciones)
 
 # select polygons and save them
-estaciones_geom <- estaciones_sf$osm_polygons %>% 
+estaciones_geom <- estaciones_sf$osm_polygons %>%
   dplyr::select(osm_id, name)
 estaciones_geom <- st_as_sf(estaciones_sf$osm_polygons)
 
-# calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
+# calculate each station's centroid (queremos trabajar con centroides u otra cosa?)
 centroides_pt <- st_centroid(estaciones_geom, byid = T)
 centroides_pt <- centroides_pt %>% 
   mutate(x = st_coordinates(centroides_pt)[, 'X']) %>% 
@@ -339,11 +339,11 @@ centroides_pt <- centroides_pt %>%
 
 centroides_pt_sf <- st_as_sf(centroides_pt, coords = c('x', 'y'), crs = 4326)
 
-# calculate distances between each property and nearest park
+# calculate distances between each property and nearest station
 dist_matrix_pt <- st_distance(x = sf_train, y = centroides_pt_sf)
 dim(dist_matrix_pt)
 
-# find min distance to any park for each property
+# find min distance to any station for each property
 dist_min_pt <- apply(dist_matrix_pt, 1, min)
 train <- train %>%
   mutate(distancia_estaciones = dist_min_pt)
@@ -357,12 +357,97 @@ plot_estaciones <- ggplot(train, aes(x = distancia_estaciones)) +
   theme_minimal()
 ggplotly(plot_estaciones)
 
-# =================== universities ========================
+# =================== malls ========================
 
-osmdata::available_tags('public_transport')
+shop <- osmdata::available_tags('shop')
 
-# ==================== estrato ============================
+# extract info
+malls <- opq(bbox = getbb('Bogota Colombia')) %>% 
+  add_osm_feature(key = 'shop', value = 'mall')
 
+# transform malls data into sf
+malls_sf <- osmdata_sf(malls)
+
+# select polygons and save them
+malls_geom <- malls_sf$osm_polygons %>% 
+  dplyr::select(osm_id, name)
+malls_geom <- st_as_sf(malls_sf$osm_polygons)
+
+# check all geoms are valid
+invalids <- st_is_valid(malls_geom, reason = T)
+table(invalids)
+which(!st_is_valid(malls_geom))
+malls_geom <- st_make_valid(malls_geom)
+
+
+# calculate each malls' centroid (queremos trabajar con centroides u otra cosa?)
+centroides_mall <- st_centroid(malls_geom, byid = T)
+centroides_mall <- centroides_mall %>% 
+  mutate(x = st_coordinates(centroides_mall)[, 'X']) %>% 
+  mutate(y = st_coordinates(centroides_mall)[, 'Y'])
+
+centroides_mall_sf <- st_as_sf(centroides_mall, coords = c('x', 'y'), crs = 4326)
+
+# calculate distances between each property and nearest park
+dist_matrix_mall <- st_distance(x = sf_train, y = centroides_mall_sf)
+dim(dist_matrix_mall)
+
+# find min distance to any park for each property
+dist_min_mall <- apply(dist_matrix_mall, 1, min)
+train <- train %>%
+  mutate(distancia_mall = dist_min_mall)
+
+# check distribution 
+plot_malls <- ggplot(train, aes(x = distancia_mall)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un mall en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a los malls') +
+  theme_minimal()
+ggplotly(plot_malls)
+
+# ==================== universities ============================
+
+# amenity <- osmdata::available_tags('amenity')
+# print(amenity)
+# 
+# # extract info of parks
+# unis <- opq(bbox = getbb('Bogota Colombia')) %>% 
+#   add_osm_feature(key = 'leisure', value = 'park')
+# 
+# # transform parks data into sf
+# parques_sf <- osmdata_sf(parques)
+# 
+# # select polygons and save them
+# parques_geom <- parques_sf$osm_polygons %>% 
+#   dplyr::select(osm_id, name)
+# parques_geom <- st_as_sf(parques_sf$osm_polygons)
+# 
+# # calculate each park's centroid (queremos trabajar con centroides u otra cosa?)
+# centroides <- st_centroid(parques_geom, byid = T)
+# centroides <- centroides %>% 
+#   mutate(x = st_coordinates(centroides)[, 'X']) %>% 
+#   mutate(y = st_coordinates(centroides)[, 'Y'])
+# 
+# centroides_sf <- st_as_sf(centroides, coords = c('x', 'y'), crs = 4326)
+# 
+# # calculate distances between each property and nearest park
+# dist_matrix <- st_distance(x = sf_train, y = centroides_sf)
+# dim(dist_matrix)
+# 
+# # find min distance to any park for each property
+# dist_min <- apply(dist_matrix, 1, min)
+# train <- train %>%
+#   mutate(distancia_parque = dist_min)
+# 
+# # check distribution 
+# plot_parks <- ggplot(train, aes(x = distancia_parque)) +
+#   geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+#   labs(x = 'Distancia mínima a un parque en metros',
+#        y = 'Cantidad',
+#        title = 'Distribución de la distancia a los parques') +
+#   theme_minimal()
+# ggplotly(plot_parks)
 
 # ===============================================================
 # 7. Checking the relationship between price and parks
@@ -413,6 +498,40 @@ price_stations <- ggplot(train %>% sample_n(1000), aes(x = distancia_estaciones,
   theme_minimal()
 ggplotly(price_stations)
 
+# ===============================================================
+# 9. Checking the relationship between price and malls
+# ===============================================================
+
+# distance
+price_malls <- ggplot(train %>% sample_n(1000), aes(x = distancia_mall,
+                                                       y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un mall en metros (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre la proximidad a un mall y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_malls)
+
+# area
+posicion_mall <- apply(dist_matrix_mall, 1, function(x) which(min(x) == x))
+
+areas1 <- st_area(malls_geom)
+train <- train %>% 
+  mutate(area_mall = as.numeric(areas1[posicion_mall]))
+
+
+price_amalls <- ggplot(train %>% sample_n(1000), aes(x = area_mall,
+                                                     y = price)) +
+  geom_point(col = 'darkblue', alpha = 0.4) +
+  labs(x = 'Área del mall más cercano (log-scale)',
+       y = 'Valor de venta (log-scale)',
+       title = 'Relación entre área de un mall y el precio del inmueble') +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  theme_minimal()
+ggplotly(price_amalls)
 
 ## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
 
