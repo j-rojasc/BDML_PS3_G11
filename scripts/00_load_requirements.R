@@ -28,8 +28,7 @@ required_packages <- c("tidyverse", "data.table", "ggplot2",
                        "boot", "glmnet", "MLmetrics", "Metrics",
                        "ranger", "summarytools", "GGally",
                        "gridExtra", "plotly", "leaflet",
-                       "tmaptools", "sf", "osmdata", "tidymodels",
-                       "stringr", "stringi")
+                       "tmaptools", "sf", "osmdata", "tidymodels")
 
 # Install and load all required packages
 install_and_load(required_packages)
