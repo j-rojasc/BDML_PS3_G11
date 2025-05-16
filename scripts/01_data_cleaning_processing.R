@@ -409,13 +409,13 @@ ggplotly(plot_malls)
 # ==================== universities ============================
 
 amenity <- osmdata::available_tags('amenity')
-print(amenity)
+print(amenity, n=137)
 
-# extract info of univesities
+# extract info of universities
 unis <- opq(bbox = getbb('Bogota Colombia')) %>%
   add_osm_feature(key = 'amenity', value = 'university') 
 
-# transform parks data into sf
+# transform data into sf
 unis_sf <- osmdata_sf(unis)
 
 # select polygons and save them
@@ -423,25 +423,25 @@ unis_geom <- unis_sf$osm_polygons %>%
   dplyr::select(osm_id, name)
 unis_geom <- st_as_sf(unis_sf$osm_polygons)
 
-# calculate each university's centroid 
-centroides <- st_centroid(unis_geom, byid = T)
-centroides <- centroides %>%
-  mutate(x = st_coordinates(centroides)[, 'X']) %>%
-  mutate(y = st_coordinates(centroides)[, 'Y'])
+# calculate each centroid (queremos trabajar con centroides u otra cosa?)
+centroides_unis <- st_centroid(unis_geom, byid = T)
+centroides_unis <- centroides_unis %>%
+  mutate(x = st_coordinates(centroides_unis)[, 'X']) %>%
+  mutate(y = st_coordinates(centroides_unis)[, 'Y'])
 
-centroides_sf <- st_as_sf(centroides, coords = c('x', 'y'), crs = 4326)
+centroides_uni_sf <- st_as_sf(centroides_unis, coords = c('x', 'y'), crs = 4326)
 
 # calculate distances between each property and nearest university
-dist_matrix_unis <- st_distance(x = sf_train, y = centroides_sf)
-dim(dist_matrix)
+dist_matrix_unis <- st_distance(x = sf_train, y = centroides_uni_sf)
+dim(dist_matrix_unis)
 
 # find min distance to any park for each property
-dist_min <- apply(dist_matrix_unis, 1, min)
+dist_min_unis <- apply(dist_matrix_unis, 1, min)
 train <- train %>%
-  mutate(distancia_university = dist_min)
+  mutate(distancia_unis = dist_min_unis)
 
 # check distribution
-plot_unis <- ggplot(train, aes(x = distancia_university)) +
+plot_unis <- ggplot(train, aes(x = distancia_unis)) +
   geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
   labs(x = 'Distancia mínima a una universidad en metros',
        y = 'Cantidad',
@@ -449,8 +449,88 @@ plot_unis <- ggplot(train, aes(x = distancia_university)) +
   theme_minimal()
 ggplotly(plot_unis)
 
+# =========================================================
+# 7. Adding spatial data from Alcaldía Mayor de Bogotá
+# =========================================================
+
+# Uploading stratification data
+estratos <- st_read(file.path(dir$raw, "ManzanaEstratificacion.shp"))
+st_crs(estratos) <- 4686
+estratos <- st_make_valid(estratos)
+sf_train <- st_transform(sf_train, 4686)
+
+# Joining sf_train and stratification data
+sf_train$estrato <- st_join(sf_train, estratos)$ESTRATO
+
+#Turning stratum 0 to NA
+sf_train$estrato[sf_train$estrato==0] <- NA
+
+#The next code is going to set new values for NA based on close neighboors
+
+# Values with and without defined data
+con_estrato <- sf_train %>% filter(!is.na(estrato))
+sin_estrato <- sf_train %>% filter(is.na(estrato))
+
+# Extracting their coordinates
+coords_con <- st_coordinates(con_estrato)
+coords_sin <- st_coordinates(sin_estrato)
+
+nn <- get.knnx(coords_con, coords_sin, k = 3)
+
+# Getting neighboors data
+vecinos_estratos <- apply(nn$nn.index, 1, function(idx) {
+  vecinos <- con_estrato$estrato[idx]
+  # Most frequent value
+  names(sort(table(vecinos), decreasing = TRUE))[1]
+})
+
+# Setting new values
+sf_train$estrato[is.na(sf_train$estrato)] <- vecinos_estratos
+
+# Adding the same column for train
+train$estrato <- sf_train$estrato
+
+# Same process but now on test
+
+estratos <- st_read(file.path(dir$raw, "ManzanaEstratificacion.shp"))
+st_crs(estratos) <- 4686
+estratos <- st_make_valid(estratos)
+
+sf_test <- st_transform(sf_test, 4686)
+
+sf_test$estrato <- st_join(sf_test, estratos)$ESTRATO
+
+sf_test$estrato[sf_test$estrato == 0] <- NA
+
+con_estrato <- sf_test %>% filter(!is.na(estrato))
+sin_estrato <- sf_test %>% filter(is.na(estrato))
+
+coords_con <- st_coordinates(con_estrato)
+coords_sin <- st_coordinates(sin_estrato)
+
+nn <- get.knnx(coords_con, coords_sin, k = 3)
+
+vecinos_estratos <- apply(nn$nn.index, 1, function(idx) {
+  vecinos <- con_estrato$estrato[idx]
+  names(sort(table(vecinos), decreasing = TRUE))[1]
+})
+
+sf_test$estrato[is.na(sf_test$estrato)] <- vecinos_estratos
+
+test$estrato <- sf_test$estrato
+
+
+# Plotting
+ggplot() +
+  geom_sf(data = estratos, aes(fill = as.factor(ESTRATO)), color = NA) +
+  scale_fill_brewer(palette = "YlOrRd", name = "Estrato") +
+  theme_minimal() +
+  labs(title = "Distribución de estratos socioeconómicos en Bogotá") +
+  theme(legend.position = "right")
+
+
 # ===============================================================
-# 7. Checking the relationship between price and parks
+# 8. Checking the relationship between price and parks
 # ===============================================================
 
 # distance to parks
@@ -483,7 +563,7 @@ price_aparks <- ggplot(train %>% sample_n(1000), aes(x = area_parque,
 ggplotly(price_aparks)
 
 # ===============================================================
-# 8. Checking the relationship between price and stations
+# 9. Checking the relationship between price and stations
 # ===============================================================
 
 # distance to public transport stations
@@ -499,7 +579,7 @@ price_stations <- ggplot(train %>% sample_n(1000), aes(x = distancia_estaciones,
 ggplotly(price_stations)
 
 # ===============================================================
-# 9. Checking the relationship between price and malls
+# 10. Checking the relationship between price and malls
 # ===============================================================
 
 # distance
@@ -533,16 +613,15 @@ price_amalls <- ggplot(train %>% sample_n(1000), aes(x = area_mall,
   theme_minimal()
 ggplotly(price_amalls)
 
-
 # ===============================================================
-# 10. Checking the relationship between price and university
+# 11. Checking the relationship between price and universities
 # ===============================================================
 
 # distance
-price_unis <- ggplot(train %>% sample_n(1000), aes(x = distancia_university,
-                                                    y = price)) +
+price_unis <- ggplot(train %>% sample_n(1000), aes(x = distancia_unis,
+                                                       y = price)) +
   geom_point(col = 'darkblue', alpha = 0.4) +
-  labs(x = 'Distancia mínima a una universidad  en metros (log-scale)',
+  labs(x = 'Distancia mínima a una universidad en metros (log-scale)',
        y = 'Valor de venta (log-scale)',
        title = 'Relación entre la proximidad a una universidad y el precio del inmueble') +
   scale_x_log10() +
