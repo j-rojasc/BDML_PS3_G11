@@ -634,7 +634,7 @@ plot_malls <- ggplot(test, aes(x = distancia_mall)) +
   theme_minimal()
 ggplotly(plot_malls)
 
-# ==================== universities TEST DATA ============================
+# ==================== universities TEST DATA ,============================
 # calculate distances between each property and nearest university
 dist_matrix_unis <- st_distance(x = sf_test, y = centroides_sf)
 dim(dist_matrix)
