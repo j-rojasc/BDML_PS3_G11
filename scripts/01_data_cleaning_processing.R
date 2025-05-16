@@ -694,7 +694,7 @@ plot_estaciones <- ggplot(test, aes(x = distancia_estaciones)) +
   theme_minimal()
 ggplotly(plot_estaciones)
 
-# =================== malls TEST DATA ========================
+# =================== malls TEST DATA =========================
 # calculate distances between each property and nearest park
 dist_matrix_mall <- st_distance(x = sf_test, y = centroides_mall_sf)
 dim(dist_matrix_mall)
