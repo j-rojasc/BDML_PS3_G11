@@ -572,5 +572,84 @@ ggplotly(price_unis)
 ## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
 
 
+# =========================================================
+# 11. Extracting spatial data from OSM 
+# TEST DATA
+# =========================================================
 
+# ===================== parks TEST DATA =============================
+# calculate distances between each property and nearest park
+dist_matrix <- st_distance(x = sf_test, y = centroides_sf)
+dim(dist_matrix)
+
+# find min distance to any park for each property
+dist_min <- apply(dist_matrix, 1, min)
+test <- test %>%
+  mutate(distancia_parque = dist_min)
+
+# check distribution 
+plot_parks <- ggplot(test, aes(x = distancia_parque)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un parque en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a los parques') +
+  theme_minimal()
+ggplotly(plot_parks)
+
+# =================== public transport TEST DATA ====================
+# calculate distances between each property and nearest station
+dist_matrix_pt <- st_distance(x = sf_test, y = centroides_pt_sf)
+dim(dist_matrix_pt)
+
+# find min distance to any station for each property
+dist_min_pt <- apply(dist_matrix_pt, 1, min)
+test <- test %>%
+  mutate(distancia_estaciones = dist_min_pt)
+
+# check distribution 
+plot_estaciones <- ggplot(test, aes(x = distancia_estaciones)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una estación de transporte público en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a las estaciones') +
+  theme_minimal()
+ggplotly(plot_estaciones)
+
+# =================== malls TEST DATA ========================
+# calculate distances between each property and nearest park
+dist_matrix_mall <- st_distance(x = sf_test, y = centroides_mall_sf)
+dim(dist_matrix_mall)
+
+# find min distance to any park for each property
+dist_min_mall <- apply(dist_matrix_mall, 1, min)
+test <- test %>%
+  mutate(distancia_mall = dist_min_mall)
+
+# check distribution 
+plot_malls <- ggplot(test, aes(x = distancia_mall)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un mall en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a los malls') +
+  theme_minimal()
+ggplotly(plot_malls)
+
+# ==================== universities TEST DATA ============================
+# calculate distances between each property and nearest university
+dist_matrix_unis <- st_distance(x = sf_test, y = centroides_sf)
+dim(dist_matrix)
+
+# find min distance to any park for each property
+dist_min <- apply(dist_matrix_unis, 1, min)
+test <- test %>%
+  mutate(distancia_university = dist_min)
+
+# check distribution
+plot_unis <- ggplot(test, aes(x = distancia_university)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una universidad en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a las universidades') +
+  theme_minimal()
+ggplotly(plot_unis)
 
