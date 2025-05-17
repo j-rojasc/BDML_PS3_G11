@@ -449,8 +449,58 @@ plot_unis <- ggplot(train, aes(x = distancia_unis)) +
   theme_minimal()
 ggplotly(plot_unis)
 
+# =========================================================
+# 7. Adding spatial data from Alcaldía Mayor de Bogotá
+# =========================================================
+
+# Uploading stratification data
+estratos <- st_read(file.path(dir$raw, "ManzanaEstratificacion.shp"))
+st_crs(estratos) <- 4686
+estratos <- st_make_valid(estratos)
+sf_train <- st_transform(sf_train, 4686)
+
+# Joining sf_train and stratification data
+sf_train$estrato <- st_join(sf_train, estratos)$ESTRATO
+
+#Turning stratum 0 to NA
+sf_train$estrato[sf_train$estrato==0] <- NA
+
+#The next code is going to set new values for NA based on close neighboors
+
+# Values with and without defined data
+con_estrato <- sf_train %>% filter(!is.na(estrato))
+sin_estrato <- sf_train %>% filter(is.na(estrato))
+
+# Extracting their coordinates
+coords_con <- st_coordinates(con_estrato)
+coords_sin <- st_coordinates(sin_estrato)
+
+nn <- get.knnx(coords_con, coords_sin, k = 3)
+
+# Getting neighboors data
+vecinos_estratos <- apply(nn$nn.index, 1, function(idx) {
+  vecinos <- con_estrato$estrato[idx]
+  # Most frequent value
+  names(sort(table(vecinos), decreasing = TRUE))[1]
+})
+
+# Setting new values
+sf_train$estrato[is.na(sf_train$estrato)] <- vecinos_estratos
+
+# Adding the same column for train
+train$estrato <- sf_train$estrato
+
+# Plotting
+ggplot() +
+  geom_sf(data = estratos, aes(fill = as.factor(ESTRATO)), color = NA) +
+  scale_fill_brewer(palette = "YlOrRd", name = "Estrato") +
+  theme_minimal() +
+  labs(title = "Distribución de estratos socioeconómicos en Bogotá") +
+  theme(legend.position = "right")
+
+
 # ===============================================================
-# 7. Checking the relationship between price and parks
+# 8. Checking the relationship between price and parks
 # ===============================================================
 
 # distance to parks
@@ -483,7 +533,7 @@ price_aparks <- ggplot(train %>% sample_n(1000), aes(x = area_parque,
 ggplotly(price_aparks)
 
 # ===============================================================
-# 8. Checking the relationship between price and stations
+# 9. Checking the relationship between price and stations
 # ===============================================================
 
 # distance to public transport stations
@@ -499,7 +549,7 @@ price_stations <- ggplot(train %>% sample_n(1000), aes(x = distancia_estaciones,
 ggplotly(price_stations)
 
 # ===============================================================
-# 9. Checking the relationship between price and malls
+# 10. Checking the relationship between price and malls
 # ===============================================================
 
 # distance
@@ -534,7 +584,7 @@ price_amalls <- ggplot(train %>% sample_n(1000), aes(x = area_mall,
 ggplotly(price_amalls)
 
 # ===============================================================
-# 10. Checking the relationship between price and universities
+# 11. Checking the relationship between price and universities
 # ===============================================================
 
 # distance
