@@ -261,7 +261,11 @@ ggplot() +
   theme_minimal()
 
 ggplot() +
-  geom_sf(data = localidades, color = 'orange') +
+  geom_sf(data = localidades %>% 
+            filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
+                                                   'USME',
+                                                   'CIUDAD BOLIVAR'))), 
+          color = 'orange') +
   geom_sf(data = sf_test, color = 'blue', shape = 15, size = 0.3) +
   theme_minimal()
 
