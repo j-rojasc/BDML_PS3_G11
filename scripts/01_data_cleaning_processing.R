@@ -490,6 +490,36 @@ sf_train$estrato[is.na(sf_train$estrato)] <- vecinos_estratos
 # Adding the same column for train
 train$estrato <- sf_train$estrato
 
+# Same process but now on test
+
+estratos <- st_read(file.path(dir$raw, "ManzanaEstratificacion.shp"))
+st_crs(estratos) <- 4686
+estratos <- st_make_valid(estratos)
+
+sf_test <- st_transform(sf_test, 4686)
+
+sf_test$estrato <- st_join(sf_test, estratos)$ESTRATO
+
+sf_test$estrato[sf_test$estrato == 0] <- NA
+
+con_estrato <- sf_test %>% filter(!is.na(estrato))
+sin_estrato <- sf_test %>% filter(is.na(estrato))
+
+coords_con <- st_coordinates(con_estrato)
+coords_sin <- st_coordinates(sin_estrato)
+
+nn <- get.knnx(coords_con, coords_sin, k = 3)
+
+vecinos_estratos <- apply(nn$nn.index, 1, function(idx) {
+  vecinos <- con_estrato$estrato[idx]
+  names(sort(table(vecinos), decreasing = TRUE))[1]
+})
+
+sf_test$estrato[is.na(sf_test$estrato)] <- vecinos_estratos
+
+test$estrato <- sf_test$estrato
+
+
 # Plotting
 ggplot() +
   geom_sf(data = estratos, aes(fill = as.factor(ESTRATO)), color = NA) +
