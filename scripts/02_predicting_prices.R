@@ -86,7 +86,6 @@ workflow2 <- workflow() %>%
   add_model(elastic_net_spec)
 
 # spatial cross validation
-
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
 
 set.seed(1111)
@@ -95,40 +94,45 @@ block_folds
 
 autoplot(block_folds)
 
-# evaluate both models
+walk(block_folds$splits, function(x) print(autoplot(x)))
+
+# train and select hyperparameters
 tune_res1 <- tune::tune_grid(
   workflow1,
-  resamples = train_fold,
+  resamples = block_folds,
   grid = grid_values,
-  metrics = metric_set(rmse)
+  metrics = metric_set(mae)
 )
 
 workflowsets::collect_metrics(tune_res1)
 
-best_penalty1 <- select_best(tune_res1, metric = 'rmse')
-best_penalty1
-
 tune_res2 <- tune::tune_grid(
   workflow2,
-  resamples = train_fold,
+  resamples = block_folds,
   grid = grid_values,
-  metrics = metric_set(rmse)
+  metrics = metric_set(mae)
 )
 
 workflowsets::collect_metrics(tune_res2)
 
-best_penalty2 <- select_best(tune_res2, metric = 'rmse')
-best_penalty2
+best_tuneres1 <- select_best(tune_res1, metric = 'mae')
+best_tuneres1
 
-EN_final1 <- finalize_workflow(workflow1, best_penalty1)
-EN_final2 <- finalize_workflow(workflow2, best_penalty2)
+best_tuneres2 <- select_best(tune_res2, metric = 'mae')
+best_tuneres2
 
-EN_final1_fit <- fit(EN_final1, data = train)
-EN_final2_fit <- fit(EN_final2, data = train)
+res_final1 <- finalize_workflow(workflow1, best_tuneres1)
+res_final2 <- finalize_workflow(workflow2, best_tuneres2)
+
+EN_final1_fit <- fit(res_final1, data = train)
+EN_final2_fit <- fit(res_final2, data = train)
 
 # get predictions over test data
-predictions1 <- predict(EN_final1_fit, new_data = test)
-predictions2 <- predict(EN_final2_fit, new_data = test)
+augment(EN_final1_fit, new_data = test) %>% 
+  mae(truth = price, estimate = .pred)
+
+augment(EN_final2_fit, new_data = test) %>% 
+  mae(truth = price, estimate = .pred)
 
 
 
