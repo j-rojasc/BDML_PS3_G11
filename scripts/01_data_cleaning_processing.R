@@ -441,7 +441,7 @@ train <- train %>%
   mutate(distancia_unis = dist_min_unis)
 
 # check distribution
-plot_unis <- ggplot(train, aes(x = distancia_university)) +
+plot_unis <- ggplot(train, aes(x = distancia_unis)) +
   geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
   labs(x = 'Distancia mínima a una universidad en metros',
        y = 'Cantidad',
