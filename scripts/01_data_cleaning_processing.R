@@ -511,6 +511,10 @@ sf_train <- st_join(sf_train, localidades, join = st_within)
 sf_train <- sf_train %>%
   filter(Nombre.de.la.localidad != 'CHAPINERO')
 
+train <- train %>% filter(
+  (property_id %in% sf_train$property_id)
+)
+
 localidades_train_filter <- ggplot() +
   geom_sf(data = localidades %>% 
             filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
