@@ -40,11 +40,11 @@ colSums(sapply(train, is.na)) > 0
 
 vis_dat(train)
 missing_train <- vis_miss(train)
-ggsave(filename = file.path(dir$views, 'vis_miss_plot_train.png'),
-       plot = missing_train,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'vis_miss_plot_train.png'),
+#        plot = missing_train,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 train %>% filter(is.na(title)) %>% count() # 22 missing titles
 
@@ -68,7 +68,7 @@ train <- train %>%
          surface_covered = replace_na(surface_covered, median_coveredsur))
 
 # check descriptive statistics of numeric variables
-stargazer(train, type = 'latex', out = file.path(dir$views, 'destats_train.tex'))
+# stargazer(train, type = 'latex', out = file.path(dir$views, 'destats_train.tex'))
 
 # create a new column to look for properties with commercial usage (0 bedrooms)
 train <- train %>%
@@ -201,8 +201,8 @@ train <- train %>%
   mutate(precio_m2 = round(price / surface_total, 0)) %>% 
   mutate(precio_m2 = precio_m2 / 1000000)
 
-stargazer(train['precio_m2'], type = 'latex', 
-          out = file.path(dir$views, 'destats_pricem2.tex'))
+# stargazer(train['precio_m2'], type = 'latex', 
+#           out = file.path(dir$views, 'destats_pricem2.tex'))
 
 hist(train$precio_m2)
 
@@ -214,11 +214,11 @@ p1 <- train %>%
        y = 'Precio por metro cuadrado (millones)', x = '') +
   theme_minimal()
 
-ggsave(filename = file.path(dir$views, 'boxplot_pricem2_complete.png'),
-       plot = p1,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'boxplot_pricem2_complete.png'),
+#        plot = p1,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 perc1 <- unname(round(quantile(train$precio_m2, probs = c(0.01)), 2))
 up <- round(mean(train$precio_m2) + 2*sd(train$precio_m2))
@@ -231,19 +231,19 @@ p2 <- train %>%
        y = 'Precio por metro cuadrado (millones)', x = '') +
   theme_minimal()
 
-ggsave(filename = file.path(dir$views, 'boxplot_pricem2_filtered.png'),
-       plot = p2,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'boxplot_pricem2_filtered.png'),
+#        plot = p2,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 p3 <- grid.arrange(p1, p2, ncol = 2)
 
-ggsave(filename = file.path(dir$views, 'boxplots_pricem2.png'),
-       plot = p3,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'boxplots_pricem2.png'),
+#        plot = p3,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 train <- train %>% 
   filter(between(precio_m2, perc1, up))
@@ -256,11 +256,11 @@ plot_price <- ggplot(train, aes(x = log10(price))) +
   theme_minimal()
 ggplotly(plot_price)
 
-ggsave(filename = file.path(dir$views, 'histogram_price.png'),
-       plot = plot_price,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'histogram_price.png'),
+#        plot = plot_price,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 # =========================================================
 # 2. Exploring and cleaning test data (NAs, outliers)
@@ -280,11 +280,11 @@ colSums(sapply(test, is.na)) > 0
 
 vis_dat(test)
 missing_test <- vis_miss(test)
-ggsave(filename = file.path(dir$views, 'vis_miss_plot_test.png'),
-       plot = missing_test,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'vis_miss_plot_test.png'),
+#        plot = missing_test,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 test %>% filter(is.na(title)) %>% count() # 6 missing titles
 
@@ -308,8 +308,8 @@ test <- test %>%
          surface_covered = replace_na(surface_covered, median_coveredsur_test))
 
 # check descriptive statistics of numeric variables
-stargazer(test, type = 'latex', out = file.path(dir$views,
-                                                'destats_test.tex'))
+# stargazer(test, type = 'latex', out = file.path(dir$views,
+#                                                 'destats_test.tex'))
 
 # create a new column to look for properties with commercial usage (0 bedrooms)
 test <- test %>%
@@ -431,7 +431,7 @@ map_train <- leaflet() %>%
              radius = train$precio_m2_sc*10,
              popup = html)
 
-saveWidget(map_train, file = file.path(dir$views, "interactive_map_train.html"))
+# saveWidget(map_train, file = file.path(dir$views, "interactive_map_train.html"))
 
 # transform data to sf
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
@@ -476,7 +476,7 @@ map_test <- leaflet() %>%
              opacity = 1,
              popup = html_test)
 
-saveWidget(map_test, file = file.path(dir$views, "interactive_map_test.html"))
+# saveWidget(map_test, file = file.path(dir$views, "interactive_map_test.html"))
 
 # transform data to sf
 sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
@@ -500,11 +500,11 @@ localidades_train <- ggplot() +
   theme_minimal()
 
 
-ggsave(filename = file.path(dir$views, "mapa_localidades_train.png"),
-       plot = localidades_train,
-       width = 8,
-       height = 6,
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, "mapa_localidades_train.png"),
+#        plot = localidades_train,
+#        width = 8,
+#        height = 6,
+#        dpi = 300)
 
 # Filter out our locality to predict Chapinero
 sf_train <- st_join(sf_train, localidades, join = st_within) 
@@ -535,11 +535,11 @@ localidades_test <- ggplot() +
   geom_sf(data = sf_test, color = 'blue', shape = 15, size = 0.3) +
   theme_minimal()
 
-ggsave(filename = file.path(dir$views, "mapa_localidades_test.png"),
-       plot = localidades_test,
-       width = 8,
-       height = 6,
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, "mapa_localidades_test.png"),
+#        plot = localidades_test,
+#        width = 8,
+#        height = 6,
+#        dpi = 300)
 
 
 # =========================================================
@@ -591,6 +591,26 @@ plot_parks <- ggplot(train, aes(x = distancia_parque)) +
   theme_minimal()
 ggplotly(plot_parks)
 
+# same process but now on test
+
+# calculate distances between each property and nearest park
+dist_matrix_test <- st_distance(x = sf_test, y = centroides_sf)
+dim(dist_matrix_test)
+
+# find min distance to any park for each property
+dist_min_test <- apply(dist_matrix_test, 1, min)
+test <- test %>%
+  mutate(distancia_parque = dist_min_test)
+
+# check distribution 
+plot_parks_test <- ggplot(test, aes(x = distancia_parque)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un parque en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a los parques') +
+  theme_minimal()
+ggplotly(plot_parks_test)
+
 # =================== public transport ====================
 
 ptransport <- osmdata::available_tags('public_transport')
@@ -634,6 +654,26 @@ plot_estaciones <- ggplot(train, aes(x = distancia_estaciones)) +
   theme_minimal()
 ggplotly(plot_estaciones)
 
+# same process but now on test
+
+# calculate distances between each property and nearest station
+dist_matrix_pt_test <- st_distance(x = sf_test, y = centroides_pt_sf)
+dim(dist_matrix_pt_test)
+
+# find min distance to any station for each property
+dist_min_pt_test <- apply(dist_matrix_pt_test, 1, min)
+test <- test %>%
+  mutate(distancia_estaciones = dist_min_pt_test)
+
+# check distribution 
+plot_estaciones_test <- ggplot(test, aes(x = distancia_estaciones)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una estación de transporte público en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a las estaciones') +
+  theme_minimal()
+ggplotly(plot_estaciones_test)
+
 # =================== malls ========================
 
 shop <- osmdata::available_tags('shop')
@@ -655,7 +695,6 @@ invalids <- st_is_valid(malls_geom, reason = T)
 table(invalids)
 which(!st_is_valid(malls_geom))
 malls_geom <- st_make_valid(malls_geom)
-
 
 # calculate each malls' centroid (queremos trabajar con centroides u otra cosa?)
 centroides_mall <- st_centroid(malls_geom, byid = T)
@@ -682,6 +721,26 @@ plot_malls <- ggplot(train, aes(x = distancia_mall)) +
        title = 'Distribución de la distancia a los malls') +
   theme_minimal()
 ggplotly(plot_malls)
+
+# same process but now on test
+
+# calculate distances between each property and nearest park
+dist_matrix_mall_test <- st_distance(x = sf_test, y = centroides_mall_sf)
+dim(dist_matrix_mall_test)
+
+# find min distance to any park for each property
+dist_min_mall_test <- apply(dist_matrix_mall_test, 1, min)
+test <- test %>%
+  mutate(distancia_mall = dist_min_mall_test)
+
+# check distribution 
+plot_malls_test <- ggplot(test, aes(x = distancia_mall)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a un mall en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a los malls') +
+  theme_minimal()
+ggplotly(plot_malls_test)
 
 # ==================== universities ============================
 
@@ -725,6 +784,26 @@ plot_unis <- ggplot(train, aes(x = distancia_unis)) +
        title = 'Distribución de la distancia a las universidades') +
   theme_minimal()
 ggplotly(plot_unis)
+
+# same process but now on test
+
+# calculate distances between each property and nearest university
+dist_matrix_unis_test <- st_distance(x = sf_test, y = centroides_uni_sf)
+dim(dist_matrix_unis_test)
+
+# find min distance to any park for each property
+dist_min_unis_test <- apply(dist_matrix_unis_test, 1, min)
+test <- test %>%
+  mutate(distancia_unis = dist_min_unis_test)
+
+# check distribution
+plot_unis_test <- ggplot(test, aes(x = distancia_unis)) +
+  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
+  labs(x = 'Distancia mínima a una universidad en metros',
+       y = 'Cantidad',
+       title = 'Distribución de la distancia a las universidades') +
+  theme_minimal()
+ggplotly(plot_unis_test)
 
 # =========================================================
 # 7. Adding spatial data from Alcaldía Mayor de Bogotá
@@ -825,7 +904,7 @@ ggplotly(price_parks)
 # park area
 posicion <- apply(dist_matrix, 1, function(x) which(min(x) == x))
 areas <- st_area(parques_geom)
-train <- train %>% 
+train <- train %>%
   mutate(area_parque = as.numeric(areas[posicion]))
 
 price_aparks <- ggplot(train %>% sample_n(1000), aes(x = area_parque,
@@ -838,6 +917,12 @@ price_aparks <- ggplot(train %>% sample_n(1000), aes(x = area_parque,
   scale_y_log10(labels = scales::dollar) +
   theme_minimal()
 ggplotly(price_aparks)
+
+# same on test
+posicion_test <- apply(dist_matrix_test, 1, function(x) which(min(x) == x))
+areas_test <- st_area(parques_geom)
+test <- test %>%
+  mutate(area_parque = as.numeric(areas_test[posicion_test]))
 
 # ===============================================================
 # 9. Checking the relationship between price and stations
@@ -875,7 +960,7 @@ ggplotly(price_malls)
 posicion_mall <- apply(dist_matrix_mall, 1, function(x) which(min(x) == x))
 
 areas1 <- st_area(malls_geom)
-train <- train %>% 
+train <- train %>%
   mutate(area_mall = as.numeric(areas1[posicion_mall]))
 
 
@@ -889,6 +974,13 @@ price_amalls <- ggplot(train %>% sample_n(1000), aes(x = area_mall,
   scale_y_log10(labels = scales::dollar) +
   theme_minimal()
 ggplotly(price_amalls)
+
+# same on test
+posicion_mall_test <- apply(dist_matrix_mall_test, 1, function(x) which(min(x) == x))
+
+areas1_test <- st_area(malls_geom)
+test <- test %>%
+  mutate(area_mall = as.numeric(areas1_test[posicion_mall_test]))
 
 # ===============================================================
 # 11. Checking the relationship between price and universities
@@ -910,7 +1002,7 @@ ggplotly(price_unis)
 posicion_unis <- apply(dist_matrix_unis, 1, function(x) which(min(x) == x))
 
 areas1 <- st_area(unis_geom)
-train <- train %>% 
+train <- train %>%
   mutate(area_unis = as.numeric(areas1[posicion_unis]))
 
 
@@ -925,85 +1017,13 @@ price_unis <- ggplot(train %>% sample_n(1000), aes(x = area_unis,
   theme_minimal()
 ggplotly(price_unis)
 
-# =========================================================
-# 11. Extracting spatial data from OSM TEST DATA
-# =========================================================
+# same on test
+posicion_unis_test <- apply(dist_matrix_unis_test, 1, function(x) which(min(x) == x))
 
-# ===================== parks TEST DATA =============================
-# calculate distances between each property and nearest park
-dist_matrix <- st_distance(x = sf_test, y = centroides_sf)
-dim(dist_matrix)
-
-# find min distance to any park for each property
-dist_min <- apply(dist_matrix, 1, min)
+areas2_test <- st_area(unis_geom)
 test <- test %>%
-  mutate(distancia_parque = dist_min)
+  mutate(area_unis = as.numeric(areas2_test[posicion_unis_test]))
 
-# check distribution 
-plot_parks <- ggplot(test, aes(x = distancia_parque)) +
-  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
-  labs(x = 'Distancia mínima a un parque en metros',
-       y = 'Cantidad',
-       title = 'Distribución de la distancia a los parques') +
-  theme_minimal()
-ggplotly(plot_parks)
 
-# =================== public transport TEST DATA ====================
-# calculate distances between each property and nearest station
-dist_matrix_pt <- st_distance(x = sf_test, y = centroides_pt_sf)
-dim(dist_matrix_pt)
-
-# find min distance to any station for each property
-dist_min_pt <- apply(dist_matrix_pt, 1, min)
-test <- test %>%
-  mutate(distancia_estaciones = dist_min_pt)
-
-# check distribution 
-plot_estaciones <- ggplot(test, aes(x = distancia_estaciones)) +
-  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
-  labs(x = 'Distancia mínima a una estación de transporte público en metros',
-       y = 'Cantidad',
-       title = 'Distribución de la distancia a las estaciones') +
-  theme_minimal()
-ggplotly(plot_estaciones)
-
-# =================== malls TEST DATA =========================
-# calculate distances between each property and nearest park
-dist_matrix_mall <- st_distance(x = sf_test, y = centroides_mall_sf)
-dim(dist_matrix_mall)
-
-# find min distance to any park for each property
-dist_min_mall <- apply(dist_matrix_mall, 1, min)
-test <- test %>%
-  mutate(distancia_mall = dist_min_mall)
-
-# check distribution 
-plot_malls <- ggplot(test, aes(x = distancia_mall)) +
-  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
-  labs(x = 'Distancia mínima a un mall en metros',
-       y = 'Cantidad',
-       title = 'Distribución de la distancia a los malls') +
-  theme_minimal()
-ggplotly(plot_malls)
-
-# ==================== universities TEST DATA ,============================
-# calculate distances between each property and nearest university
-dist_matrix_unis <- st_distance(x = sf_test, y = centroides_sf)
-dim(dist_matrix)
-
-# find min distance to any park for each property
-dist_min <- apply(dist_matrix_unis, 1, min)
-test <- test %>%
-  mutate(distancia_university = dist_min)
-
-# check distribution
-plot_unis <- ggplot(test, aes(x = distancia_university)) +
-  geom_histogram(bins = 50, fill = 'darkblue', alpha = 0.4) +
-  labs(x = 'Distancia mínima a una universidad en metros',
-       y = 'Cantidad',
-       title = 'Distribución de la distancia a las universidades') +
-  theme_minimal()
-ggplotly(plot_unis)
-
-## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
-## saveRDS(test, file.path(dir$processed, paste0("test_clean", ".rds")), row.names = F)
+saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")))
+saveRDS(test, file.path(dir$processed, paste0("test_clean", ".rds")))
