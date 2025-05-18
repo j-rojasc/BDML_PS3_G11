@@ -925,12 +925,8 @@ price_unis <- ggplot(train %>% sample_n(1000), aes(x = area_unis,
   theme_minimal()
 ggplotly(price_unis)
 
-## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
-
-
 # =========================================================
-# 11. Extracting spatial data from OSM 
-# TEST DATA
+# 11. Extracting spatial data from OSM TEST DATA
 # =========================================================
 
 # ===================== parks TEST DATA =============================
@@ -1009,3 +1005,5 @@ plot_unis <- ggplot(test, aes(x = distancia_university)) +
   theme_minimal()
 ggplotly(plot_unis)
 
+## saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")), row.names = F)
+## saveRDS(test, file.path(dir$processed, paste0("test_clean", ".rds")), row.names = F)
