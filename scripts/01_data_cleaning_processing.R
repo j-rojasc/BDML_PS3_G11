@@ -486,7 +486,9 @@ sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
 # =========================================================
 
 localidades <- st_read(file.path(dir$raw, "poligonos-localidades.geojson"))
-localidades <- st_transform(localidades, 4626)
+localidades <- st_transform(localidades, 4326)
+
+# Map without filter chapinero
 
 localidades_train <- ggplot() +
   geom_sf(data = localidades %>% 
@@ -497,8 +499,29 @@ localidades_train <- ggplot() +
   geom_sf(data = sf_train, aes(color = precio_m2), shape = 15, size = 0.3) +
   theme_minimal()
 
+
 ggsave(filename = file.path(dir$views, "mapa_localidades_train.png"),
        plot = localidades_train,
+       width = 8,
+       height = 6,
+       dpi = 300)
+
+# Filter out our locality to predict Chapinero
+sf_train <- st_join(sf_train, localidades, join = st_within) 
+sf_train <- sf_train %>%
+  filter(Nombre.de.la.localidad != 'CHAPINERO')
+
+localidades_train_filter <- ggplot() +
+  geom_sf(data = localidades %>% 
+            filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
+                                                   'USME',
+                                                   'CIUDAD BOLIVAR'))), 
+          color = 'orange') +
+  geom_sf(data = sf_train, aes(color = precio_m2), shape = 15, size = 0.3) +
+  theme_minimal()
+
+ggsave(filename = file.path(dir$views, "mapa_localidades_train_filter.png"),
+       plot = localidades_train_filter,
        width = 8,
        height = 6,
        dpi = 300)
