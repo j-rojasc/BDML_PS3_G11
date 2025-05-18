@@ -148,6 +148,12 @@ p1 <- train %>%
        y = 'Precio por metro cuadrado (millones)', x = '') +
   theme_minimal()
 
+ggsave(filename = file.path(dir$views, 'boxplot_pricem2_complete.png'),
+       plot = p1,
+       width = 8, 
+       height = 6, 
+       dpi = 300)
+
 perc1 <- unname(round(quantile(train$precio_m2, probs = c(0.01)), 2))
 up <- round(mean(train$precio_m2) + 2*sd(train$precio_m2))
 
@@ -158,7 +164,20 @@ p2 <- train %>%
   labs(title = 'Muestra Filtrada',
        y = 'Precio por metro cuadrado (millones)', x = '') +
   theme_minimal()
-grid.arrange(p1, p2, ncol = 2)
+
+ggsave(filename = file.path(dir$views, 'boxplot_pricem2_filtered.png'),
+       plot = p2,
+       width = 8, 
+       height = 6, 
+       dpi = 300)
+
+p3 <- grid.arrange(p1, p2, ncol = 2)
+
+ggsave(filename = file.path(dir$views, 'boxplots_pricem2.png'),
+       plot = p3,
+       width = 8, 
+       height = 6, 
+       dpi = 300)
 
 train <- train %>% 
   filter(between(precio_m2, perc1, up))
@@ -171,45 +190,88 @@ plot_price <- ggplot(train, aes(x = log10(price))) +
   theme_minimal()
 ggplotly(plot_price)
 
+ggsave(filename = file.path(dir$views, 'histogram_price.png'),
+       plot = plot_price,
+       width = 8, 
+       height = 6, 
+       dpi = 300)
+
 # =========================================================
 # 2. Exploring and cleaning test data (NAs, outliers)
 # =========================================================
 
-dim(test) # check dimensions
-table(test$operation_type) # check operation type - all venta
+# check operation and property types
+table(test$operation_type)
 
 test %>%
-  count(property_type) # check types of properties
+  count(property_type)
 
+# select only vars that are not constant
 test <- test %>% dplyr:: select(-constant_vars)
-dim(test)
 
+#check for columns with missing values
 colSums(sapply(test, is.na)) > 0
 
-vis_dat(test) # check missing values
+vis_dat(test)
+missing_test <- vis_miss(test)
+ggsave(filename = file.path(dir$views, 'vis_miss_plot_test.png'),
+       plot = missing_test,
+       width = 8, 
+       height = 6, 
+       dpi = 300)
+
+test %>% filter(is.na(title)) %>% count() # 6 missing titles
+
+test %>% filter(is.na(description)) %>% count() # 2 missing descriptions
+
+# find mode and median to replace missing data
+test %>% 
+  count(rooms)
 
 test %>% 
-  count(rooms) # find mode for rooms
+  count(bathrooms)
 
-test %>% 
-  count(bathrooms) # find mode for bathrooms
-
-median_totalsur_test <- median(test$surface_total, na.rm = T) # calculate median for surfaces
+median_totalsur_test <- median(test$surface_total, na.rm = T)
 median_coveredsur_test <- median(test$surface_covered, na.rm = T)
 
-# input missing data
-
+# input missing data with modes and medians
 test <- test %>% 
   mutate(rooms = replace_na(rooms, 3),
          bathrooms = replace_na(bathrooms, 2),
          surface_total = replace_na(surface_total, median_totalsur_test),
          surface_covered = replace_na(surface_covered, median_coveredsur_test))
 
-colSums(sapply(test, is.na)) > 0
-vis_dat(test)
+# check descriptive statistics of numeric variables
+stargazer(test, type = 'latex', out = file.path(dir$views,
+                                                'destats_test.tex'))
 
-# check distribution of numeric variables
-stargazer(test, type = 'text') # valores raros en surface total 15 m2 y 108,800 m2, 0 bedrooms.
+# create a new column to look for properties with commercial usage (0 bedrooms)
+test <- test %>%
+  mutate(
+    usage_type = case_when(
+      str_detect(tolower(description),
+                 'bodega|oficina|local|negocio') ~ 'commercial',
+      TRUE ~ 'residential'))
+
+# extract number of bedrooms from descriptions
+test <- test %>% 
+  mutate(
+    bedrooms_extracted = case_when(
+      usage_type == 'residential' & bedrooms == 0 ~ str_extract(description, 
+                                                                '\\d+\\s*(alcoba|habitacion|cuarto)s?'),
+      TRUE ~ NA_character_
+    ),
+    bedrooms_extracted = as.numeric(str_extract(bedrooms_extracted, '\\d+')))
+
+# change bedrooms if a valid number was extracted
+test <- test %>% 
+  mutate(
+    bedrooms = if_else(
+      bedrooms == 0 & usage_type == 'residential' & !is.na(bedrooms_extracted),
+      bedrooms_extracted,
+      bedrooms
+    )
+  )
 
 # =========================================================
 # 3. Mapping train data
