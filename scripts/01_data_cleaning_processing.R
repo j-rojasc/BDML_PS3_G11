@@ -40,11 +40,11 @@ colSums(sapply(train, is.na)) > 0
 
 vis_dat(train)
 missing_train <- vis_miss(train)
-ggsave(filename = file.path(dir$views, 'vis_miss_plot_train.png'),
-       plot = missing_train,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'vis_miss_plot_train.png'),
+#        plot = missing_train,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 train %>% filter(is.na(title)) %>% count() # 22 missing titles
 
@@ -68,7 +68,7 @@ train <- train %>%
          surface_covered = replace_na(surface_covered, median_coveredsur))
 
 # check descriptive statistics of numeric variables
-stargazer(train, type = 'latex', out = file.path(dir$views, 'destats_train.tex'))
+# stargazer(train, type = 'latex', out = file.path(dir$views, 'destats_train.tex'))
 
 # create a new column to look for properties with commercial usage (0 bedrooms)
 train <- train %>%
@@ -201,8 +201,8 @@ train <- train %>%
   mutate(precio_m2 = round(price / surface_total, 0)) %>% 
   mutate(precio_m2 = precio_m2 / 1000000)
 
-stargazer(train['precio_m2'], type = 'latex', 
-          out = file.path(dir$views, 'destats_pricem2.tex'))
+# stargazer(train['precio_m2'], type = 'latex', 
+#           out = file.path(dir$views, 'destats_pricem2.tex'))
 
 hist(train$precio_m2)
 
@@ -214,11 +214,11 @@ p1 <- train %>%
        y = 'Precio por metro cuadrado (millones)', x = '') +
   theme_minimal()
 
-ggsave(filename = file.path(dir$views, 'boxplot_pricem2_complete.png'),
-       plot = p1,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'boxplot_pricem2_complete.png'),
+#        plot = p1,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 perc1 <- unname(round(quantile(train$precio_m2, probs = c(0.01)), 2))
 up <- round(mean(train$precio_m2) + 2*sd(train$precio_m2))
@@ -231,19 +231,19 @@ p2 <- train %>%
        y = 'Precio por metro cuadrado (millones)', x = '') +
   theme_minimal()
 
-ggsave(filename = file.path(dir$views, 'boxplot_pricem2_filtered.png'),
-       plot = p2,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'boxplot_pricem2_filtered.png'),
+#        plot = p2,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 p3 <- grid.arrange(p1, p2, ncol = 2)
 
-ggsave(filename = file.path(dir$views, 'boxplots_pricem2.png'),
-       plot = p3,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'boxplots_pricem2.png'),
+#        plot = p3,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 train <- train %>% 
   filter(between(precio_m2, perc1, up))
@@ -256,11 +256,11 @@ plot_price <- ggplot(train, aes(x = log10(price))) +
   theme_minimal()
 ggplotly(plot_price)
 
-ggsave(filename = file.path(dir$views, 'histogram_price.png'),
-       plot = plot_price,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'histogram_price.png'),
+#        plot = plot_price,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 # =========================================================
 # 2. Exploring and cleaning test data (NAs, outliers)
@@ -280,11 +280,11 @@ colSums(sapply(test, is.na)) > 0
 
 vis_dat(test)
 missing_test <- vis_miss(test)
-ggsave(filename = file.path(dir$views, 'vis_miss_plot_test.png'),
-       plot = missing_test,
-       width = 8, 
-       height = 6, 
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, 'vis_miss_plot_test.png'),
+#        plot = missing_test,
+#        width = 8, 
+#        height = 6, 
+#        dpi = 300)
 
 test %>% filter(is.na(title)) %>% count() # 6 missing titles
 
@@ -308,8 +308,8 @@ test <- test %>%
          surface_covered = replace_na(surface_covered, median_coveredsur_test))
 
 # check descriptive statistics of numeric variables
-stargazer(test, type = 'latex', out = file.path(dir$views,
-                                                'destats_test.tex'))
+# stargazer(test, type = 'latex', out = file.path(dir$views,
+#                                                 'destats_test.tex'))
 
 # create a new column to look for properties with commercial usage (0 bedrooms)
 test <- test %>%
@@ -431,7 +431,7 @@ map_train <- leaflet() %>%
              radius = train$precio_m2_sc*10,
              popup = html)
 
-saveWidget(map_train, file = file.path(dir$views, "interactive_map_train.html"))
+# saveWidget(map_train, file = file.path(dir$views, "interactive_map_train.html"))
 
 # transform data to sf
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
@@ -476,7 +476,7 @@ map_test <- leaflet() %>%
              opacity = 1,
              popup = html_test)
 
-saveWidget(map_test, file = file.path(dir$views, "interactive_map_test.html"))
+# saveWidget(map_test, file = file.path(dir$views, "interactive_map_test.html"))
 
 # transform data to sf
 sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
@@ -497,11 +497,11 @@ localidades_train <- ggplot() +
   geom_sf(data = sf_train, aes(color = precio_m2), shape = 15, size = 0.3) +
   theme_minimal()
 
-ggsave(filename = file.path(dir$views, "mapa_localidades_train.png"),
-       plot = localidades_train,
-       width = 8,
-       height = 6,
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, "mapa_localidades_train.png"),
+#        plot = localidades_train,
+#        width = 8,
+#        height = 6,
+#        dpi = 300)
 
 localidades_test <- ggplot() +
   geom_sf(data = localidades %>% 
@@ -512,11 +512,11 @@ localidades_test <- ggplot() +
   geom_sf(data = sf_test, color = 'blue', shape = 15, size = 0.3) +
   theme_minimal()
 
-ggsave(filename = file.path(dir$views, "mapa_localidades_test.png"),
-       plot = localidades_test,
-       width = 8,
-       height = 6,
-       dpi = 300)
+# ggsave(filename = file.path(dir$views, "mapa_localidades_test.png"),
+#        plot = localidades_test,
+#        width = 8,
+#        height = 6,
+#        dpi = 300)
 
 
 # =========================================================
