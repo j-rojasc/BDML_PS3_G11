@@ -310,7 +310,7 @@ html <- paste0("<b>Precio:</b> ",
 lat_central <- mean(train$lat)
 lon_central <- mean(train$lon)
 
-leaflet() %>% 
+map_train <- leaflet() %>% 
   addTiles() %>% 
   setView(lng = lon_central, lat = lat_central, zoom = 11) %>% 
   addCircles(lng = train$lon,
@@ -320,6 +320,8 @@ leaflet() %>%
              opacity = 1,
              radius = train$precio_m2_sc*10,
              popup = html)
+
+saveWidget(map_train, file = file.path(dir$views, "interactive_map_train.html"))
 
 # transform data to sf
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
@@ -354,15 +356,17 @@ html_test <- paste0("<br> <b>Area:</b> ",
 lat_central_test <- mean(test$lat)
 lon_central_test <- mean(test$lon)
 
-leaflet() %>% 
+map_test <- leaflet() %>% 
   addTiles() %>% 
-  setView(lng = lon_central_test, lat = lat_central_test, zoom = 11) %>% 
+  setView(lng = lon_central_test, lat = lat_central_test, zoom = 13) %>% 
   addCircles(lng = test$lon,
              lat = test$lat,
              col = test$color,
              fillOpacity = 1,
              opacity = 1,
              popup = html_test)
+
+saveWidget(map_test, file = file.path(dir$views, "interactive_map_test.html"))
 
 # transform data to sf
 sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
@@ -374,7 +378,7 @@ sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
 localidades <- st_read(file.path(dir$raw, "poligonos-localidades.geojson"))
 localidades <- st_transform(localidades, 4626)
 
-ggplot() +
+localidades_train <- ggplot() +
   geom_sf(data = localidades %>% 
             filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
                                                    'USME',
@@ -383,7 +387,13 @@ ggplot() +
   geom_sf(data = sf_train, aes(color = precio_m2), shape = 15, size = 0.3) +
   theme_minimal()
 
-ggplot() +
+ggsave(filename = file.path(dir$views, "mapa_localidades_train.png"),
+       plot = localidades_train,
+       width = 8,
+       height = 6,
+       dpi = 300)
+
+localidades_test <- ggplot() +
   geom_sf(data = localidades %>% 
             filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
                                                    'USME',
@@ -391,6 +401,13 @@ ggplot() +
           color = 'orange') +
   geom_sf(data = sf_test, color = 'blue', shape = 15, size = 0.3) +
   theme_minimal()
+
+ggsave(filename = file.path(dir$views, "mapa_localidades_test.png"),
+       plot = localidades_test,
+       width = 8,
+       height = 6,
+       dpi = 300)
+
 
 # =========================================================
 # 6. Extracting spatial data from OSM
