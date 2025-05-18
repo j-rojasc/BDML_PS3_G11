@@ -61,7 +61,6 @@ median_totalsur <- median(train$surface_total, na.rm = T)
 median_coveredsur <- median(train$surface_covered, na.rm = T)
 
 # input missing data with modes and medians
-
 train <- train %>% 
   mutate(rooms = replace_na(rooms, 3),
          bathrooms = replace_na(bathrooms, 2),
@@ -69,23 +68,79 @@ train <- train %>%
          surface_covered = replace_na(surface_covered, median_coveredsur))
 
 # check descriptive statistics of numeric variables
-
 stargazer(train, type = 'latex', out = file.path(dir$views, 'destats_train.tex'))
 
-# 
+# create a new column to look for properties with commercial usage (0 bedrooms)
+train <- train %>%
+  mutate(
+    usage_type = case_when(
+      str_detect(tolower(description),
+                 'bodega|oficina|local|negocio') ~ 'commercial',
+      TRUE ~ 'residential'))
+
+train <- train %>% 
+  mutate(
+    usage_type = case_when(
+      property_id %in% c('5e728b7e8963db83de6b24f0', 
+                         '49679ddbae871d957d44fc47', 
+                         '1021686694a0b7d514752220',
+                         'fcf646927a1a711a4624db0e') ~ 'residential',
+      TRUE ~ usage_type
+    )
+  )
+
+train <- train %>% 
+  mutate(
+    usage_type = case_when(
+      property_id %in% c('7414965b658996300406cbc8',
+                         'bd396a0122feddffe741c259',
+                         '5ed18f05976f694207732c46',
+                         'e61f9417246e8663bc061bde',
+                         '1dfffcad24a86f44298a6a4c',
+                         '257a6e95ec86faacc0645adf',
+                         '03d6a954744e72f7928ac456',
+                         'a9d74d8a46fb12f0bcc79a58',
+                         'fe0682be1fbc31b7c5580afa',
+                         '91c2760388ad1e3aa437b9e6',
+                         '5fdd57730a451a2e31177600'
+                         ) ~ 'commercial',
+      TRUE ~ usage_type
+    )
+  )
+
+# extract number of bedrooms from descriptions
+train <- train %>% 
+  mutate(
+    bedrooms_extracted = case_when(
+    usage_type == 'residential' & bedrooms == 0 ~ str_extract(description, 
+                                              '\\d+\\s*(alcoba|habitacion|cuarto)s?'),
+    TRUE ~ NA_character_
+    ),
+    bedrooms_extracted = as.numeric(str_extract(bedrooms_extracted, '\\d+')))
+
+# change bedrooms if a valid number was extracted
+train <- train %>% 
+  mutate(
+    bedrooms = if_else(
+      bedrooms == 0 & usage_type == 'residential' & !is.na(bedrooms_extracted),
+      bedrooms_extracted,
+      bedrooms
+    )
+  )
+
+###### aún hay algunas obs donde no se extrajo pues (ej.) en vez de 3 habs dicen tres habs?????????????
 
 # calculate price per m2
-
 train <- train %>% 
   mutate(precio_m2 = round(price / surface_total, 0)) %>% 
   mutate(precio_m2 = precio_m2 / 1000000)
 
-stargazer(train['precio_m2'], type = 'text') # valores mínimos y máximos irreales
+stargazer(train['precio_m2'], type = 'latex', 
+          out = file.path(dir$views, 'destats_pricem2.tex'))
 
 hist(train$precio_m2)
 
 # work with outliers
-
 p1 <- train %>% 
   ggplot(aes(y = precio_m2)) +
   geom_boxplot(fill = 'darkblue', alpha = 0.4) +
