@@ -3,11 +3,9 @@
 # =========================================================
 
 # Clear workspace
-
 rm(list = ls())
 
 # Set up paths
-
 dir <- list ()
 dir$root <- getwd()
 dir$processed <- file.path(dir$root, "stores", "processed")
@@ -17,11 +15,9 @@ dir$scripts <- file.path(dir$root, "scripts")
 setwd(dir$root)
 
 # Load required libraries
-
 source(file.path(dir$scripts, "00_load_requirements.R"))
 
 # Load inputs
-
 train <- read.csv(file.path(dir$raw, "train.csv"))
 test <- read.csv(file.path(dir$raw, "test.csv"))
 
@@ -29,30 +25,42 @@ test <- read.csv(file.path(dir$raw, "test.csv"))
 # 1. Exploring and cleaning train data (NAs, outliers)
 # =========================================================
 
-dim(train) # check dimensions
-table(train$operation_type) # check operation type - all venta
+# check operation and property types
+table(train$operation_type)
 
 train %>%
-  count(property_type) # check types of properties
+  count(property_type)
 
+# select only variables that are not constant
 constant_vars <- c('city', 'operation_type')
 train <- train %>% dplyr:: select(-constant_vars)
-dim(train)
 
+# check columns with missing values
 colSums(sapply(train, is.na)) > 0
 
-vis_dat(train) # check missing values
+vis_dat(train)
+missing_train <- vis_miss(train)
+ggsave(filename = file.path(dir$views, 'vis_miss_plot_train.png'),
+       plot = missing_train,
+       width = 8, 
+       height = 6, 
+       dpi = 300)
+
+train %>% filter(is.na(title)) %>% count() # 22 missing titles
+
+train %>% filter(is.na(description)) %>% count() # 9 missing descriptions
+
+# find mode and median to replace missing data
+train %>% 
+  count(rooms)
 
 train %>% 
-  count(rooms) # find mode for rooms
+  count(bathrooms)
 
-train %>% 
-  count(bathrooms) # find mode for bathrooms
-
-median_totalsur <- median(train$surface_total, na.rm = T) # calculate median for surfaces
+median_totalsur <- median(train$surface_total, na.rm = T)
 median_coveredsur <- median(train$surface_covered, na.rm = T)
 
-# input missing data
+# input missing data with modes and medians
 
 train <- train %>% 
   mutate(rooms = replace_na(rooms, 3),
@@ -60,13 +68,11 @@ train <- train %>%
          surface_total = replace_na(surface_total, median_totalsur),
          surface_covered = replace_na(surface_covered, median_coveredsur))
 
-colSums(sapply(train, is.na)) > 0
-vis_dat(train)
+# check descriptive statistics of numeric variables
 
-# check distribution of numeric variables
+stargazer(train, type = 'latex', out = file.path(dir$views, 'destats_train.tex'))
 
-stargazer(train, type = 'text')
-# valores raros en surface covered 2 m2, 0 bedrooms. Limpieza de estos datos según descripción.
+# 
 
 # calculate price per m2
 
