@@ -12,6 +12,7 @@ dir <- list ()
 dir$root <- getwd()
 dir$processed <- file.path(dir$root, "stores", "processed")
 dir$raw <- file.path(dir$root, "stores", "raw")
+dir$models <- file.path(dir$root, "stores", "models")
 dir$views <- file.path(dir$root, "views")
 dir$scripts <- file.path(dir$root, "scripts")
 setwd(dir$root)
@@ -69,8 +70,8 @@ recipe2 <- recipe(price ~ distancia_parque + area_parque + distancia_estaciones
                   distancia_mall:matches('property_type_') +
                   area_mall:matches('property_type_') +
                   distancia_unis:matches('property_type_')) %>% 
-  step_interact(terms = ~ distancia_parque:area_parque +
-                  distancia_mall:area:mall) %>% 
+  # #step_interact(terms = ~ distancia_parque:area_parque +
+  #                 distancia_mall:area:mall) %>% 
   step_poly(distancia_parque, area_parque, distancia_estaciones, distancia_mall,
             area_mall, distancia_unis, degree = 2) %>% 
   step_novel(all_nominal_predictors()) %>% 
@@ -91,6 +92,7 @@ workflow2 <- workflow() %>%
 # =========================================================================
 
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
+sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
 
 set.seed(1111)
 block_folds <- spatial_block_cv(sf_train, v = 5)
@@ -138,18 +140,12 @@ res_final2 <- finalize_workflow(workflow2, best_tuneres2)
 EN_final1_fit <- fit(res_final1, data = train)
 EN_final2_fit <- fit(res_final2, data = train)
 
-# get predictions over test data
-augment(EN_final1_fit, new_data = test) %>% 
-  mae(truth = price, estimate = .pred)
-
-augment(EN_final2_fit, new_data = test) %>% 
-  mae(truth = price, estimate = .pred)
-
 # export predictions
 predicted_prices <- augment(EN_final1_fit, new_data = test)
 
-submission <- predicted_prices %>% 
-  select(property_id = property_id, predicted_prices = .pred)
+submission <- test %>% 
+  select(property_id) %>% 
+  mutate(price = predicted_prices$.pred)
 
-write.csv(submission, file = file.path(dir$root, 'submission.csv'), row.names = F)
+write.csv(submission, file = file.path(dir$models, 'elasticnet_alpha0.01_mix1.csv'), row.names = F)
 
