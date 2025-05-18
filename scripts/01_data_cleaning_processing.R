@@ -108,15 +108,36 @@ train <- train %>%
     )
   )
 
+#Dictionary to convert words to numbers
+word_to_number <- c(
+  "una" = 1, "un" = 1, "uno" = 1,
+  "dos" = 2, "tres" = 3, "cuatro" = 4,
+  "cinco" = 5, "seis" = 6, "siete" = 7,
+  "ocho" = 8, "nueve" = 9, "diez" = 10,
+  "once" = 11, "doce" = 12, "trece" = 13,
+  "catorce" = 14, "quince" = 15
+)
+
+# Function Words to number
+to_number <- function(x) {
+  x <- tolower(x)
+  ifelse(x %in% names(word_to_number), word_to_number[x], as.numeric(x))
+}
+
+# Pattern for words and number
+number_pattern <- paste(c("\\d+", names(word_to_number)), collapse = "|")
+regex_bedrooms <- paste0("(", number_pattern, ")\\s*(alcoba|habitación|cuarto)s?")
+
 # extract number of bedrooms from descriptions
-train <- train %>% 
+train <- train %>%
   mutate(
-    bedrooms_extracted = case_when(
-    usage_type == 'residential' & bedrooms == 0 ~ str_extract(description, 
-                                              '\\d+\\s*(alcoba|habitacion|cuarto)s?'),
-    TRUE ~ NA_character_
+    extract_raw = case_when(
+      usage_type == "residential" & bedrooms == 0 ~ str_extract(description, regex_bedrooms),
+      TRUE ~ NA_character_
     ),
-    bedrooms_extracted = as.numeric(str_extract(bedrooms_extracted, '\\d+')))
+    bedrooms_extracted = str_extract(extract_raw, number_pattern),
+    bedrooms_extracted = as.numeric(to_number(bedrooms_extracted))
+  ) %>% select(-extract_raw)
 
 # change bedrooms if a valid number was extracted
 train <- train %>% 
@@ -126,9 +147,54 @@ train <- train %>%
       bedrooms_extracted,
       bedrooms
     )
+  ) %>% select(-bedrooms_extracted)
+
+# Extract number of parking spaces from descriptions
+
+train <- train %>%
+  mutate(
+    extract_raw = case_when(
+      usage_type == "residential"  ~ str_extract(description, "\\d+\\s*(parqueadero|garaje)s?"),
+      TRUE ~ NA_character_
+    ),
+    parking_spaces_extracted = str_extract(extract_raw, "\\d+"),
+    parking_spaces_extracted = as.numeric(to_number(parking_spaces_extracted))
+  ) %>% select(-extract_raw)
+
+# change parking_spaces if a valid number was extracted
+train <- train %>% 
+  mutate(
+    parking_spaces = if_else(
+       usage_type == 'residential' & !is.na(parking_spaces_extracted) & 
+        parking_spaces_extracted <= 5, #Why imposed that there are no home with more than 5 parking spaces?
+      parking_spaces_extracted,
+      0
+    )
+  ) %>% select(-parking_spaces_extracted)
+
+# Extract from the title the specific type of property
+train <- train %>%
+  mutate(
+    property_type_extracted = case_when(
+      str_detect(tolower(title), 'apartamento|apto') ~ 'Apartamento',
+      str_detect(tolower(title), 'casa') ~ 'Casa',
+      str_detect(tolower(title), 'apartaestudio|aparta estudio') ~ 'Apartaestudio',
+      str_detect(tolower(title), 'ph|penthouse') ~ 'PH',
+      str_detect(tolower(title), 'duplex') ~ 'Duplex',
+      TRUE ~ property_type
+    )
   )
 
-###### aún hay algunas obs donde no se extrajo pues (ej.) en vez de 3 habs dicen tres habs?????????????
+
+# Extract if the property has vigilance, common areas, is new, has gym, humidity zones or deposits
+train <- train %>%
+  mutate(
+    vigilance = ifelse(str_detect(tolower(description), 'vigilancia|vigilante'), 1, 0),
+    common_areas = ifelse(str_detect(tolower(description), 'zonas comunes|zonas sociales|bbq|salones comunales|salones sociales'), 1, 0),
+    gym = ifelse(str_detect(tolower(description), 'gimnasio|gim|gym'), 1, 0),
+    humidity_zones = ifelse(str_detect(tolower(description), 'zonas humedas|piscina|jacuzzi'), 1, 0),
+    deposit = ifelse(str_detect(tolower(description), 'deposito|depósito|cuarto util'), 1, 0)
+  )
 
 # calculate price per m2
 train <- train %>% 
@@ -271,6 +337,50 @@ test <- test %>%
       bedrooms_extracted,
       bedrooms
     )
+  )
+
+# extract number of parking spaces from descriptions
+test <- test %>%
+  mutate(
+    parking_spaces_extracted = case_when(
+      usage_type == "residential"  ~ str_extract(description, "\\d+\\s*(parqueadero|garaje)s?"),
+      TRUE ~ NA_character_
+    ),
+    parking_spaces_extracted = as.numeric(str_extract(parking_spaces_extracted, "\\d+"))
+  )
+
+# change parking_spaces if a valid number was extracted
+test <- test %>% 
+  mutate(
+    parking_spaces = if_else(
+      usage_type == 'residential' & !is.na(parking_spaces_extracted) & 
+        parking_spaces_extracted <= 5, #Why imposed that there are no home with more than 5 parking spaces?
+      parking_spaces_extracted,
+      0
+    )
+  ) %>% select(-parking_spaces_extracted)
+
+# Extract from the title the specific type of property
+test <- test %>%
+  mutate(
+    property_type_extracted = case_when(
+      str_detect(tolower(title), 'apartamento|apto') ~ 'Apartamento',
+      str_detect(tolower(title), 'casa') ~ 'Casa',
+      str_detect(tolower(title), 'apartaestudio|aparta estudio') ~ 'Apartaestudio',
+      str_detect(tolower(title), 'ph|penthouse') ~ 'PH',
+      str_detect(tolower(title), 'duplex') ~ 'Duplex',
+      TRUE ~ property_type
+    )
+  )
+
+# Extract if the property has vigilance, common areas, is new, has gym, humidity zones or deposits
+test <- test %>%
+  mutate(
+    vigilance = ifelse(str_detect(tolower(description), 'vigilancia|vigilante'), 1, 0),
+    common_areas = ifelse(str_detect(tolower(description), 'zonas comunes|zonas sociales|bbq|salones comunales|salones sociales|terraza'), 1, 0),
+    gym = ifelse(str_detect(tolower(description), 'gimnasio|gim|gym'), 1, 0),
+    humidity_zones = ifelse(str_detect(tolower(description), 'zonas humedas|piscina|jacuzzi'), 1, 0),
+    deposit = ifelse(str_detect(tolower(description), 'deposito|depósito|cuarto util'), 1, 0)
   )
 
 # =========================================================
