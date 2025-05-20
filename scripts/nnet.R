@@ -25,9 +25,6 @@ source(file.path(dir$scripts, "00_load_requirements.R"))
 train <- import(file.path(dir$processed, 'train_clean.rds'))
 test <- import(file.path(dir$processed, 'test_clean.rds'))
 
-sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
-sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
-
 nnet_tune <- parsnip::mlp(
   hidden_units = tune(),
   epochs = tune()) %>% 
@@ -51,12 +48,16 @@ recipe_nnet <- recipes::recipe(
   step_novel(all_nominal_predictors()) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_poly(surface_total, degree = 2) %>% 
+  step_log(price, skip = F) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_predictors())
 
 workflow_tune <- workflow() %>% 
   add_recipe(recipe_nnet) %>% 
   add_model(nnet_tune)
+
+sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
+sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
 
 set.seed(1111)
 
@@ -67,6 +68,7 @@ autoplot(block_folds)
 
 walk(block_folds$splits, function(x) print(autoplot(x)))
 
+set.seed(1111)
 tune_nnet <- tune_grid(
   workflow_tune,
   resamples = block_folds,
