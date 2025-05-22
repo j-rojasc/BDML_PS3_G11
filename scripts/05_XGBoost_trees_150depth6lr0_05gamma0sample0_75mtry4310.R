@@ -98,7 +98,7 @@ num_predictors <- ncol(juice(prep(receta))) - 1  # Resta 1 por la variable respu
 #  distinct()  # Elimina posibles duplicados al redondear
 
 grid_xgb <- expand.grid(
-  trees = c(150),                          # Fijo
+  trees = c(200),                          # Fijo
   tree_depth = c(4, 6),                    # 2 valores → Mantener
   learn_rate = c(0.05),                    # Reducir a 1 valor intermedio (ej: 0.05)
   loss_reduction = c(0),                   # Reducir a 1 valor (0 es común)
