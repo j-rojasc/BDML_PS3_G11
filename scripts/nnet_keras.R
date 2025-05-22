@@ -17,11 +17,11 @@ setwd(dir$root)
 
 source(file.path(dir$scripts, "00_load_requirements.R"))
 
-# install.packages("keras")
+install.packages("keras")
 library(reticulate)
-# reticulate::virtualenv_create("r-reticulate", python = install_python())
+reticulate::virtualenv_create("r-reticulate", python = install_python())
 library(keras)
-# install_keras(envname = "r-reticulate")
+install_keras(envname = "r-reticulate")
 
 # Load inputs
 train <- readRDS(file.path(dir$processed, 'train_clean.rds'))
@@ -67,7 +67,7 @@ recipe_nnet <- recipes::recipe(
   step_novel(all_nominal_predictors()) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_poly(surface_total, degree = 2) %>% 
-  step_log(price, skip = F) %>% 
+  step_log(price, skip = T) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_predictors())
 
@@ -76,7 +76,6 @@ workflow_tune <- workflow() %>%
   add_model(nnet_tune)
 
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
-sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
 
 # select hyperparamenters using spatial cross validation
 set.seed(1111)
@@ -99,6 +98,8 @@ tune_nnet <- tune_grid(
                          allow_par = T)
 )
 
+autoplot(tune_nnet)
+
 workflowsets::collect_metrics(tune_nnet)
 
 best_tune_nnet <- select_best(tune_nnet, metric = 'mae')
@@ -112,6 +113,8 @@ predicted_prices <- broom::augment(nnet_tuned_final_fit, new_data = test)
 
 submission <- test %>%
   select(property_id) %>% 
-  mutate(price = predicted_prices$.pred)
+  mutate(price = exp(predicted_prices$.pred))
 
-write.csv(submission, file = file.path(dir$models, 'nnet_.csv'), row.names = F)
+submission
+
+write.csv(submission, file = file.path(dir$models, 'NeuralNetwork_hiddenunits10_epochs150_dropout01.csv'), row.names = F)
