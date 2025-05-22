@@ -23,7 +23,7 @@ train <- import(file.path(dir$processed, 'train_clean.rds'))
 test <- import(file.path(dir$processed, 'test_clean.rds'))
 
 
-# Verificar proporciones originales
+# Verificar proporciones originales de estratos para muestrear y balancear
 prop_original <- train %>%
   count(estrato) %>%
   mutate(prop = n / sum(n))
@@ -34,11 +34,11 @@ print(prop_original)
 set.seed(123)  # Para reproducibilidad
 train <- train %>%
   group_by(estrato) %>%
-  slice_sample(prop = 0.30) %>%  # 25% por estrato
+  slice_sample(prop = 0.45) %>%  # 25% por estrato
   ungroup()
 
 # Verificar nuevas proporciones
-prop_resampled <- train_resampled %>%
+prop_resampled <- train %>%
   count(estrato) %>%
   mutate(prop = n / sum(n))
 
