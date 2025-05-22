@@ -22,19 +22,8 @@ setwd(dir$root)
 source(file.path(dir$scripts, "00_load_requirements.R"))
 
 # Load inputs
-train <- import(file.path(dir$processed, 'train_clean.rds'))
-test <- import(file.path(dir$processed, 'test_clean.rds'))
-
-nnet_tune <- parsnip::mlp(
-  hidden_units = tune(),
-  epochs = tune()) %>% 
-  parsnip::set_mode('regression') %>% 
-  parsnip::set_engine('nnet', trace = 0)
-
-grid_values <- tidyr::crossing(
-  hidden_units = seq(from = 5, to = 60, by = 5),
-  epochs = seq(from = 300, to = 500, by = 100)
-)
+train <- readRDS(file.path(dir$processed, 'train_clean.rds'))
+test <- readRDS(file.path(dir$processed, 'test_clean.rds'))
 
 formula <- as.formula(
   paste("price ~ surface_total + rooms + bathrooms + property_type + usage_type +
@@ -44,36 +33,44 @@ formula <- as.formula(
 )
 
 recipe_nnet <- recipes::recipe(
-  formula, data = train) %>% 
+  formula, data = train) %>%
   step_novel(all_nominal_predictors()) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_poly(surface_total, degree = 2) %>% 
-  step_log(price, skip = F) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_predictors())
+
+# specify the nnet
+nnet_tune <- parsnip::mlp(
+  hidden_units = tune(),
+  epochs = tune()) %>% 
+  parsnip::set_mode('regression') %>% 
+  parsnip::set_engine('nnet')
+
+grid_values <- tidyr::crossing(
+  hidden_units = seq(from = 10, to = 30, by = 10),
+  epochs = c(150, 200))
 
 workflow_tune <- workflow() %>% 
   add_recipe(recipe_nnet) %>% 
   add_model(nnet_tune)
 
 sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
-sf_test <- st_as_sf(test, coords = c('lon', 'lat'), crs = 4326)
 
+# select hyperparamenters using spatial cross validation
 set.seed(1111)
 
-block_folds <- spatial_block_cv(sf_train, v = 15)
+block_folds <- spatial_block_cv(sf_train, v = 6)
 block_folds
 
-autoplot(block_folds)
-
-walk(block_folds$splits, function(x) print(autoplot(x)))
-
 set.seed(1111)
+
 tune_nnet <- tune_grid(
   workflow_tune,
   resamples = block_folds,
   grid = grid_values,
-  metrics = metric_set(mae)
+  metrics = metric_set(mae),
+  control = control_grid(verbose = T)
 )
 
 workflowsets::collect_metrics(tune_nnet)
@@ -91,4 +88,4 @@ submission <- test %>%
   select(property_id) %>% 
   mutate(price = predicted_prices$.pred)
 
-write.csv(submission, file = file.path(dir$models, 'nnet_.csv'), row.names = F)
+write.csv(submission, file = file.path(dir$models, 'NeuralNetwork_20hiddenunits_150epochs.csv'), row.names = F)
