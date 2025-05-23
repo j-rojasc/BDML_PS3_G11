@@ -96,10 +96,6 @@ grid_xgb <- expand.grid(
 ) %>%
   distinct()
 
-# Validación cruzada espacial con solo 1 fold
-#sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
-#set.seed(1111)
-#block_folds <- spatial_block_cv(sf_train, v = 2)
 
 
 # Resuelve conflictos primero
