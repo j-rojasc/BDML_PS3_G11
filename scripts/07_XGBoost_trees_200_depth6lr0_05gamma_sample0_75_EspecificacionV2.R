@@ -19,18 +19,8 @@ setwd(dir$root)
 source(file.path(dir$scripts, "00_load_requirements.R"))
 
 # Load inputs
-train <- import(file.path(dir$processed, 'train_clean.rds')) %>% 
-  mutate(property_type=as.factor(property_type),
-         usage_type=as.factor(usage_type),
-         color=as.factor(color),
-         estrato=as.factor(estrato),
-         property_type_extracted=as.factor(property_type_extracted))
-test <- import(file.path(dir$processed, 'test_clean.rds'))%>% 
-  mutate(property_type=as.factor(property_type),
-         usage_type=as.factor(usage_type),
-         color=as.factor(color),
-         estrato=as.factor(estrato),
-         property_type_extracted=as.factor(property_type_extracted))
+train <- import(file.path(dir$processed, 'train_clean.rds')) 
+test <- import(file.path(dir$processed, 'test_clean.rds'))
 
 
 
