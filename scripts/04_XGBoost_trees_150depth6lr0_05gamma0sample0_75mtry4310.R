@@ -176,3 +176,5 @@ submission <- test %>%
 
 # Guardar archivo en la carpeta deseada
 write.csv(submission, file.path(dir$models, name), row.names = FALSE)
+
+saveRDS(final_fit_rf, file.path(dir$models,"xgboost_optimizado.rds"))

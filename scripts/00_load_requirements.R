@@ -30,7 +30,8 @@ required_packages <- c("tidyverse", "data.table", "ggplot2",
                        "gridExtra", "plotly", "leaflet",
                        "tmaptools", "sf", "osmdata", "tidymodels",
                        "stringr", "stringi", "FNN", "spatialsample",
-                       "htmlwidgets", "textrecipes","rsample","nnet")
+                       "htmlwidgets", "textrecipes","rsample","nnet",
+                       "stacks", "SuperLearner")
 
 
 # Install and load all required packages
