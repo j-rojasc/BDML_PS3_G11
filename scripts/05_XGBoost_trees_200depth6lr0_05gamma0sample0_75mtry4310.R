@@ -86,17 +86,6 @@ block_folds <- spatial_block_cv(sf_train, v = 5)
 # Calcular el número total de predictores después del preprocesamiento
 num_predictors <- ncol(juice(prep(receta))) - 1  # Resta 1 por la variable respuesta
 
-# Modificar el grid para usar valores enteros
-#grid_xgb <- expand.grid(
-#  trees = c(150),
-#  tree_depth = c(4, 6),
-#  learn_rate = c(0.03, 0.07),
-#  loss_reduction = c(0, 0.5),
-#  sample_size = c(0.75),
-#  mtry = floor(c(0.3, 0.4, 0.5) * num_predictors)  # Convierte a enteros
-#) %>%
-#  distinct()  # Elimina posibles duplicados al redondear
-
 grid_xgb <- expand.grid(
   trees = c(200),                          # Fijo
   tree_depth = c(4, 6),                    # 2 valores → Mantener
