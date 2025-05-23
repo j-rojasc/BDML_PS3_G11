@@ -124,6 +124,7 @@ best_xgb <- tune::select_best(tune_res_xgb, metric = "rmse")
 
 # Entrenamiento final
 final_xgb <- finalize_workflow(workflow_xgb, best_xgb)
+train <- import(file.path(dir$processed, 'train_clean.rds'))
 final_fit <- fit(final_xgb, data = train)  # Sin select()
 
 
