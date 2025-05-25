@@ -38,7 +38,7 @@ train <- train %>%
   ungroup()
 
 # Verificar nuevas proporciones
-prop_resampled <- train_resampled %>%
+prop_resampled <- train %>%
   count(estrato) %>%
   mutate(prop = n / sum(n))
 
@@ -114,9 +114,9 @@ grid_xgb <- expand.grid(
 
 
 # Resuelve conflictos primero
-conflicts_prefer(yardstick::mae)
-conflicts_prefer(yardstick::rmse)
-conflicts_prefer(yardstick::rsq)
+#conflicts_prefer(yardstick::mae)
+#conflicts_prefer(yardstick::rmse)
+#conflicts_prefer(yardstick::rsq)
 
 tune_res_xgb <- tune_grid(
   workflow_xgb,
@@ -177,4 +177,4 @@ submission <- test %>%
 # Guardar archivo en la carpeta deseada
 write.csv(submission, file.path(dir$models, name), row.names = FALSE)
 
-saveRDS(final_fit_rf, file.path(dir$models,"xgboost_optimizado.rds"))
+saveRDS(final_fit, file.path(dir$models,"xgboost_optimizado.rds"))

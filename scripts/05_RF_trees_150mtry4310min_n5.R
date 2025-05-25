@@ -15,6 +15,13 @@ dir$views <- file.path(dir$root, "views")
 dir$scripts <- file.path(dir$root, "scripts")
 setwd(dir$root)
 
+install.packages("devtools")
+devtools::install_github("r-lib/conflicted")
+library(conflicted)
+library(dplyr)
+
+filter(mtcars, cyl == 8)
+
 # Load required libraries
 source(file.path(dir$scripts, "00_load_requirements.R"))
 
