@@ -31,7 +31,7 @@ required_packages <- c("tidyverse", "data.table", "ggplot2",
                        "tmaptools", "sf", "osmdata", "tidymodels",
                        "stringr", "stringi", "FNN", "spatialsample",
                        "htmlwidgets", "textrecipes","rsample","nnet",
-                       "ranger", "xgboost", "SuperLearner")
+                       "ranger", "xgboost", "stacks", "SuperLearner")
 
 
 # Install and load all required packages

@@ -19,30 +19,12 @@ setwd(dir$root)
 source(file.path(dir$scripts, "00_load_requirements.R"))
 
 # Load inputs
-train <- import(file.path(dir$processed, 'train_clean.rds'))
+train <- import(file.path(dir$processed, 'train_clean.rds')) 
 test <- import(file.path(dir$processed, 'test_clean.rds'))
 
 
-# Verificar proporciones originales
-prop_original <- train %>%
-  count(estrato) %>%
-  mutate(prop = n / sum(n))
 
-print(prop_original)
 
-# Resampleo estratificado (25% manteniendo proporciones)
-set.seed(123)  # Para reproducibilidad
-train <- train %>%
-  group_by(estrato) %>%
-  slice_sample(prop = 0.30) %>%  # 25% por estrato
-  ungroup()
-
-# Verificar nuevas proporciones
-prop_resampled <- train %>%
-  count(estrato) %>%
-  mutate(prop = n / sum(n))
-
-print(prop_resampled)
 # -------------------------------------------------------------------------
 # 1. Modelo XGBoost (versión reducida de prueba)
 # -------------------------------------------------------------------------
@@ -63,15 +45,15 @@ xgb_spec <- parsnip::boost_tree(
 
 # Asegúrate de que 'train' no sea un objeto sf (convertirlo después)
 train_df <- train %>% 
-  select(-lon, -lat)  # Elimina coordenadas para la receta
+  select(-lon, -lat,-property_id,-year,-month,-title,-description,-property_type_extracted) 
 
 # Receta SIN lon/lat (usa solo variables predictoras)
 receta <- recipe(price ~ ., data = train_df) %>%
   step_rm(precio_m2, precio_m2_sc) %>%
-  step_tokenize(title, description) %>%
-  step_stopwords(title, description) %>%
-  step_tokenfilter(title, description, max_tokens = 100) %>%
-  step_tfidf(title, description) %>%
+  #step_tokenize(title, description) %>%
+  #step_stopwords(title, description) %>%
+  #step_tokenfilter(title, description, max_tokens = 100) %>%
+  #step_tfidf(title, description) %>%
   step_novel(all_nominal_predictors()) %>%
   step_dummy(all_nominal_predictors())
 
@@ -86,19 +68,8 @@ block_folds <- spatial_block_cv(sf_train, v = 5)
 # Calcular el número total de predictores después del preprocesamiento
 num_predictors <- ncol(juice(prep(receta))) - 1  # Resta 1 por la variable respuesta
 
-# Modificar el grid para usar valores enteros
-#grid_xgb <- expand.grid(
-#  trees = c(150),
-#  tree_depth = c(4, 6),
-#  learn_rate = c(0.03, 0.07),
-#  loss_reduction = c(0, 0.5),
-#  sample_size = c(0.75),
-#  mtry = floor(c(0.3, 0.4, 0.5) * num_predictors)  # Convierte a enteros
-#) %>%
-#  distinct()  # Elimina posibles duplicados al redondear
-
 grid_xgb <- expand.grid(
-  trees = c(150),                          # Fijo
+  trees = c(200),                          # Fijo
   tree_depth = c(4, 6),                    # 2 valores → Mantener
   learn_rate = c(0.05),                    # Reducir a 1 valor intermedio (ej: 0.05)
   loss_reduction = c(0),                   # Reducir a 1 valor (0 es común)
@@ -107,16 +78,12 @@ grid_xgb <- expand.grid(
 ) %>%
   distinct()
 
-# Validación cruzada espacial con solo 1 fold
-#sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
-#set.seed(1111)
-#block_folds <- spatial_block_cv(sf_train, v = 2)
 
 
 # Resuelve conflictos primero
-#conflicts_prefer(yardstick::mae)
-#conflicts_prefer(yardstick::rmse)
-#conflicts_prefer(yardstick::rsq)
+conflicts_prefer(yardstick::mae)
+conflicts_prefer(yardstick::rmse)
+conflicts_prefer(yardstick::rsq)
 
 tune_res_xgb <- tune_grid(
   workflow_xgb,
@@ -126,15 +93,12 @@ tune_res_xgb <- tune_grid(
   control = control_grid(save_pred = TRUE, verbose = TRUE)
 )
 
-# Revisar si hay errores
-#show_notes(tune_res_xgb)
-
-
 # Selección de mejores hiperparámetros
 best_xgb <- tune::select_best(tune_res_xgb, metric = "rmse")
 
 # Entrenamiento final
 final_xgb <- finalize_workflow(workflow_xgb, best_xgb)
+train <- import(file.path(dir$processed, 'train_clean.rds'))
 final_fit <- fit(final_xgb, data = train)  # Sin select()
 
 
@@ -176,5 +140,3 @@ submission <- test %>%
 
 # Guardar archivo en la carpeta deseada
 write.csv(submission, file.path(dir$models, name), row.names = FALSE)
-
-saveRDS(final_fit, file.path(dir$models,"xgboost_optimizado.rds"))

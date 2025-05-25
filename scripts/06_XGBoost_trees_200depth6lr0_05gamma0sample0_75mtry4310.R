@@ -86,17 +86,6 @@ block_folds <- spatial_block_cv(sf_train, v = 5)
 # Calcular el número total de predictores después del preprocesamiento
 num_predictors <- ncol(juice(prep(receta))) - 1  # Resta 1 por la variable respuesta
 
-# Modificar el grid para usar valores enteros
-#grid_xgb <- expand.grid(
-#  trees = c(150),
-#  tree_depth = c(4, 6),
-#  learn_rate = c(0.03, 0.07),
-#  loss_reduction = c(0, 0.5),
-#  sample_size = c(0.75),
-#  mtry = floor(c(0.3, 0.4, 0.5) * num_predictors)  # Convierte a enteros
-#) %>%
-#  distinct()  # Elimina posibles duplicados al redondear
-
 grid_xgb <- expand.grid(
   trees = c(200),                          # Fijo
   tree_depth = c(4, 6),                    # 2 valores → Mantener
@@ -107,10 +96,6 @@ grid_xgb <- expand.grid(
 ) %>%
   distinct()
 
-# Validación cruzada espacial con solo 1 fold
-#sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
-#set.seed(1111)
-#block_folds <- spatial_block_cv(sf_train, v = 2)
 
 
 # Resuelve conflictos primero
@@ -135,6 +120,7 @@ best_xgb <- tune::select_best(tune_res_xgb, metric = "rmse")
 
 # Entrenamiento final
 final_xgb <- finalize_workflow(workflow_xgb, best_xgb)
+train <- import(file.path(dir$processed, 'train_clean.rds'))
 final_fit <- fit(final_xgb, data = train)  # Sin select()
 
 
