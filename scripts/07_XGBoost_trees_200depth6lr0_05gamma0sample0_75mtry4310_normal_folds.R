@@ -78,9 +78,9 @@ workflow_xgb <- workflow() %>%
   add_model(xgb_spec) %>%
   add_recipe(receta)
 
-# Crear folds espaciales (usando el objeto sf original)
-sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
-block_folds <- spatial_block_cv(sf_train, v = 5)
+# Cross validation
+
+block_folds <- vfold_cv(train, v = 5)
 
 # Calcular el número total de predictores después del preprocesamiento
 num_predictors <- ncol(juice(prep(receta))) - 1  # Resta 1 por la variable respuesta
@@ -141,7 +141,8 @@ name <- paste0(
   "lr", learn_rate,
   "gamma", loss_reduction,
   "sample", sample_size,
-  "mtry", mtry
+  "mtry", mtry,
+  "normal_fold"
 )
 
 # Asegúrate de que test tenga las columnas requeridas (aunque sea con NA)
