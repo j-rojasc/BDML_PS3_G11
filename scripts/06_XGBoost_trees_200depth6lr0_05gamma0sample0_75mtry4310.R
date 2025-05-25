@@ -2,8 +2,7 @@
 # 0. Workspace configuration
 # =========================================================================
 
-# Clear workspace
-rm(list = ls())
+# Clear workspace 
 
 # Set up paths
 dir <- list()
