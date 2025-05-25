@@ -1,0 +1,120 @@
+[33m63751de[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m Add XGBoost model files (.RDS and .csv) using Git LFS
+[33m25cb1c5[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m mejorar XGboost
+[33m5046eac[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33mabf4a92[m last version
+[33m176caa6[m Correct code to solve merge issue
+[33m41f9c12[m Add new required packages
+[33m5e8259a[m Random y XGBoost
+[33m53b2a6c[m modelo, script V" especificación
+[33mec12deb[m Nueva especificacion
+[33m3ec5277[m codigolimpio
+[33mdc51e7c[m script name
+[33m4268095[m save
+[33m8b7da3a[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33m3e3edbe[m xgboost final
+[33m649f1f3[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33m9ff72fc[m +Paquete +RandomForest
+[33md483071[m añadir stacks
+[33mb185a95[m Save price predictions from neural network
+[33m8575008[m Skip step_log() in test and add exp() for final predictions
+[33m0904d5c[m Upload script of nnet using keras
+[33m99af605[m Rename script of first elastic net
+[33maee3d83[m Delete lines of code related to using keras
+[33m235485c[m Add code to run a neural network with mpl keras
+[33m9430fba[m name
+[33m38fb1b8[m Cambio parámetro trees
+[33mbcff6c3[m resampleo
+[33m6318d98[m xg 2
+[33mda49ecc[m XG boost 2, sample mayor
+[33m8104ef7[m Save price predictions for neural network
+[33mecb326a[m Adjust neural network script reducing grid values
+[33m22f2fa7[m Project ID ?
+[33m280c2e4[m XGBoost
+[33ma799092[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33m4ec84dd[m Añadir un nevo paquete
+[33m6d7a620[m Correct mising values in binary vars
+[33mff84789[m Upload script of elastic net
+[33m9e6815c[m Add files via upload
+[33m97cf05b[m Add nnet to required packages
+[33m5db2c7f[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33mc573243[m Model 2 elasticnet
+[33m80feb64[m Añadir paquete
+[33mcdd15ea[m Merge branches 'main' and 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33md2e6b7b[m Add path to dir$models
+[33m8653264[m Create new folder to store models in repository
+[33m8f81682[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33m422619a[m Filter by localidad
+[33m8a52930[m Upload tables again
+[33m85d1a98[m Delete stores/US90.txt
+[33m121a698[m Upload graphs and tables
+[33m03b35c1[m Add new folder for models, correct how submission is created and exported
+[33m1f56b5e[m filter train
+[33m5859e15[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33med9aaf5[m Update cleaned test and train data
+[33ma978eda[m Comment lines of code exporting graphs and tables
+[33m3665aea[m add missing columns to test (distance_unis, area_mall, area_parks)
+[33m2ad07c7[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33m5dc57f5[m Filter out chapinero for training
+[33m27087af[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33m5440c26[m Update script that uses processed data as inputs and exports a csv with property id and predicted prices
+[33mda8ecee[m Export processed data
+[33m4e84163[m Extract new variables from title and description, apply function words to numbers
+[33m7061926[m Save train and test maps
+[33mc29059f[m Update mapping sections to save maps in views folder
+[33m0cc91da[m Add htmlwidgets package to be able to save interactive maps is views folder
+[33m927c137[m Save graph of columns with missin values in test
+[33me4b93f1[m Save descriptive statistics table of test
+[33mec84da2[m Update exploration and cleaning of test data
+[33ma7d82d3[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33mc19120f[m Rename script for predicting price
+[33m8e5bb4e[m Rename script for extracting spatial data from OSM
+[33m258fe55[m Delete views/av_discrimination.tex
+[33mbe3d607[m Delete views/fig1a.pdf
+[33m8318c4b[m Save histogram of price
+[33m2ef4cff[m Save boxplots of price per m2
+[33ma4df5c3[m save descriptive statistics table for price per m2
+[33m484c985[m correcting cases where bedrooms = 0
+[33m3558b79[m save plot of missing data in train
+[33mc9b2e41[m save table of train's descriptive statistics
+[33me037788[m improving comments in the script and adding code to export graphs and tables
+[33mdd9fb7c[m Correct script with spatial cross validation
+[33m169c428[m Upload script for modelling and predicting prices
+[33mabe50c7[m Add spatialsample in required packages
+[33m00bde98[m Filter localidades when mapping test
+[33m7e09c1a[m commit
+[33m0fa240c[m Merge branch 'main' of https://github.com/j-rojasc/BDML_PS3_G11
+[33m25284dc[m Estrato para la data de test
+[33mc5f1a07[m Añadir la variable de estratos
+[33m71d493a[m Añadir el paquete FNN oara los vecinos más cercanos
+[33m2fe10e5[m corregir error de nombre de variable
+[33m749b97a[m commit again
+[33m6557f8f[m OSM Para TEST DATA
+[33m3ae645d[m fix issues of merging
+[33mfca21cc[m Add extraction of OSM universities data
+[33m8a3f32d[m universidades train y relacion enttre universidades y precio
+[33m9d4a29d[m universidades actualizado (train)
+[33m29a47ad[m Add extraction of OSM data about malls
+[33m3b1446b[m Extract OSM public transport data
+[33m0e51507[m Revert "Add stringr and string to manage texts and descriptions"
+[33m358cc1a[m Add stringr and string to manage texts and descriptions
+[33maa40576[m Add space for other OSM extractions
+[33m353e6fb[m Add cleaning and mapping of test data
+[33m135c8ef[m Add commented code to save the clean data for use in other scripts
+[33m1660d71[m Add final section to check correlation between price and parks
+[33mdbca2fc[m Complete code for data extraction and add code to include localidades
+[33m3ea349d[m Upload geojson file with data of localidades
+[33m1c8f23c[m Add lines of code regarding the sections on mapping train data and extracting spatial data from OSM
+[33mfe575d9[m Delete scripts/01_example_script.R
+[33m53f5836[m Delete lines of code relative to leaflet since we are not interesting in creating visuals in this script
+[33m9c94482[m mapas
+[33m82e0779[m cod
+[33m98302fe[m Add lines of code using plotly and leaflet
+[33mf648ee2[m Add lines of code to input missing data and filter data to avoid outliers
+[33mb4f6acd[m Upload script for data cleaning and data processing
+[33m49b3c28[m Add script to load required packages
+[33m496c191[m Create gitkeep file to show processed data folder
+[33ma48874e[m Upload test and train data to raw folder
+[33m6ab940f[m First commit
+[33m73a3de3[m Revert "Borre tablas y figuras"
+[33m90459ce[m Borre tablas y figuras
+[33m66a7526[m first commit
