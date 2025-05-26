@@ -2,8 +2,7 @@
 # 0. Workspace configuration
 # =========================================================================
 
-# Clear workspace
-rm(list = ls())
+# Clear workspace 
 
 # Set up paths
 dir <- list()
@@ -67,7 +66,7 @@ train_df <- train %>%
 
 # Receta SIN lon/lat (usa solo variables predictoras)
 receta <- recipe(price ~ ., data = train_df) %>%
-  step_rm(precio_m2, precio_m2_sc) %>%
+  step_rm(precio_m2, precio_m2_sc,property_id) %>%
   step_tokenize(title, description) %>%
   step_stopwords(title, description) %>%
   step_tokenfilter(title, description, max_tokens = 100) %>%
@@ -142,8 +141,7 @@ name <- paste0(
   "lr", learn_rate,
   "gamma", loss_reduction,
   "sample", sample_size,
-  "mtry", mtry,
-  ".csv"
+  "mtry", mtry
 )
 
 # Asegúrate de que test tenga las columnas requeridas (aunque sea con NA)
@@ -161,4 +159,5 @@ submission <- test %>%
   mutate(price = predicted_prices$.pred)
 
 # Guardar archivo en la carpeta deseada
-write.csv(submission, file.path(dir$models, name), row.names = FALSE)
+write.csv(submission, file.path(dir$models, paste0(name,".csv")), row.names = FALSE)
+saveRDS(final_fit, file.path(dir$models, paste0(name,".RDS")))
