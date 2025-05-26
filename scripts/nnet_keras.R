@@ -27,7 +27,7 @@ install_keras(envname = "r-reticulate")
 train <- readRDS(file.path(dir$processed, 'train_clean.rds'))
 test <- readRDS(file.path(dir$processed, 'test_clean.rds'))
 
-train <- train %>% select(-c(title, description))
+train <- train %>% select(-c(title, description, precio_m2, precio_m2_sc))
 test <- test %>% select(-c(title, description))
 
 # input some missing values
@@ -80,6 +80,8 @@ sf_train <- st_as_sf(train, coords = c('lon', 'lat'), crs = 4326)
 # select hyperparamenters using spatial cross validation
 set.seed(1111)
 
+# cv_folds <- vfold_cv(train, v = 5)
+
 block_folds <- spatial_block_cv(sf_train, v = 5)
 block_folds
 
@@ -91,7 +93,7 @@ set.seed(1111)
 
 tune_nnet <- tune_grid(
   workflow_tune,
-  resamples = block_folds,
+  resamples = cv_folds,
   grid = grid_values,
   metrics = metric_set(mae),
   control = control_grid(verbose = T,
@@ -117,4 +119,4 @@ submission <- test %>%
 
 submission
 
-write.csv(submission, file = file.path(dir$models, 'NeuralNetwork_hiddenunits10_epochs150_dropout01.csv'), row.names = F)
+write.csv(submission, file = file.path(dir$models, 'NeuralNetwork_hiddenunits10_epochs150_dropout02.csv'), row.names = F)
