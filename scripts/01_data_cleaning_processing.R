@@ -47,9 +47,9 @@ missing_train <- vis_miss(train)
 #        height = 6, 
 #        dpi = 300)
 
-train %>% filter(is.na(title)) %>% count() # 22 missing titles
+train %>% dplyr::filter(is.na(title)) %>% count() # 22 missing titles
 
-train %>% filter(is.na(description)) %>% count() # 9 missing descriptions
+train %>% dplyr::filter(is.na(description)) %>% count() # 9 missing descriptions
 
 # find mode and median to replace missing data
 train %>% 
@@ -225,7 +225,7 @@ perc1 <- unname(round(quantile(train$precio_m2, probs = c(0.01)), 2))
 up <- round(mean(train$precio_m2) + 2*sd(train$precio_m2))
 
 p2 <- train %>% 
-  filter(between(precio_m2, perc1, up)) %>% 
+  dplyr::filter(dplyr::between(precio_m2, perc1, up)) %>% 
   ggplot(aes(y = precio_m2)) +
   geom_boxplot(fill = 'darkblue', alpha = 0.4) +
   labs(title = 'Muestra Filtrada',
@@ -247,7 +247,7 @@ p3 <- grid.arrange(p1, p2, ncol = 2)
 #        dpi = 300)
 
 train <- train %>% 
-  filter(between(precio_m2, perc1, up))
+  dplyr::filter(dplyr::between(precio_m2, perc1, up))
 
 plot_price <- ggplot(train, aes(x = log10(price))) +
   geom_histogram(binwidth = 0.05, fill = 'darkblue', alpha = 0.4) +
@@ -395,8 +395,8 @@ leaflet() %>%
 
 limites <- getbb('Bogota Colombia')
 train <- train %>% 
-  filter(between(lon, limites[1, 'min'], limites[1, 'max']) &
-           between(lat, limites[2, 'min'], limites[2, 'max'])
+  dplyr::filter(dplyr::between(lon, limites[1, 'min'], limites[1, 'max']) &
+           dplyr::between(lat, limites[2, 'min'], limites[2, 'max'])
          )
 
 train <- train %>% 
@@ -447,8 +447,8 @@ leaflet() %>%
              lat = test$lat)
 
 test <- test %>% 
-  filter(between(lon, limites[1, 'min'], limites[1, 'max']) &
-           between(lat, limites[2, 'min'], limites[2, 'max'])
+  dplyr::filter(dplyr::between(lon, limites[1, 'min'], limites[1, 'max']) &
+           dplyr::between(lat, limites[2, 'min'], limites[2, 'max'])
   )
 
 test <- test %>% 
@@ -493,32 +493,32 @@ localidades <- st_transform(localidades, 4326)
 
 localidades_train <- ggplot() +
   geom_sf(data = localidades %>% 
-            filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
+            dplyr::filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
                                                    'USME',
                                                    'CIUDAD BOLIVAR'))), 
           color = 'orange') +
-  geom_sf(data = sf_train, aes(color = precio_m2), shape = 15, size = 0.3) +
+  geom_sf(data = sf_train, aes(color = price), shape = 15, size = 0.3) +
   theme_minimal()
 
 
-# ggsave(filename = file.path(dir$views, "mapa_localidades_train.png"),
-#        plot = localidades_train,
-#        width = 8,
-#        height = 6,
-#        dpi = 300)
+ggsave(filename = file.path(dir$views, "localidades_train.png"),
+       plot = localidades_train,
+       width = 8,
+       height = 6,
+       dpi = 300)
 
 # Filter out our locality to predict Chapinero
 sf_train <- st_join(sf_train, localidades, join = st_within) 
 sf_train <- sf_train %>%
-  filter(Nombre.de.la.localidad != 'CHAPINERO')
+  dplyr::filter(Nombre.de.la.localidad != 'CHAPINERO')
 
-train <- train %>% filter(
+train <- train %>% dplyr::filter(
   (property_id %in% sf_train$property_id)
 )
 
 localidades_train_filter <- ggplot() +
   geom_sf(data = localidades %>% 
-            filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
+            dplyr::filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
                                                    'USME',
                                                    'CIUDAD BOLIVAR'))), 
           color = 'orange') +
@@ -533,7 +533,7 @@ ggsave(filename = file.path(dir$views, "mapa_localidades_train_filter.png"),
 
 localidades_test <- ggplot() +
   geom_sf(data = localidades %>% 
-            filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
+            dplyr::filter(!(Nombre.de.la.localidad %in% c('SUMAPAZ',
                                                    'USME',
                                                    'CIUDAD BOLIVAR'))), 
           color = 'orange') +
@@ -829,8 +829,8 @@ sf_train$estrato[sf_train$estrato==0] <- NA
 #The next code is going to set new values for NA based on close neighboors
 
 # Values with and without defined data
-con_estrato <- sf_train %>% filter(!is.na(estrato))
-sin_estrato <- sf_train %>% filter(is.na(estrato))
+con_estrato <- sf_train %>% dplyr::filter(!is.na(estrato))
+sin_estrato <- sf_train %>% dplyr::filter(is.na(estrato))
 
 # Extracting their coordinates
 coords_con <- st_coordinates(con_estrato)
@@ -863,8 +863,8 @@ sf_test$estrato <- st_join(sf_test, estratos)$ESTRATO
 
 sf_test$estrato[sf_test$estrato == 0] <- NA
 
-con_estrato <- sf_test %>% filter(!is.na(estrato))
-sin_estrato <- sf_test %>% filter(is.na(estrato))
+con_estrato <- sf_test %>% dplyr::filter(!is.na(estrato))
+sin_estrato <- sf_test %>% dplyr::filter(is.na(estrato))
 
 coords_con <- st_coordinates(con_estrato)
 coords_sin <- st_coordinates(sin_estrato)
@@ -882,12 +882,18 @@ test$estrato <- sf_test$estrato
 
 
 # Plotting
-ggplot() +
+estratos_plot <- ggplot() +
   geom_sf(data = estratos, aes(fill = as.factor(ESTRATO)), color = NA) +
   scale_fill_brewer(palette = "YlOrRd", name = "Estrato") +
   theme_minimal() +
   labs(title = "Distribución de estratos socioeconómicos en Bogotá") +
   theme(legend.position = "right")
+
+ggsave(filename = file.path(dir$views, "mapa_estratos.png"),
+       plot = estratos_plot,
+       width = 8,
+       height = 6,
+       dpi = 300)
 
 
 # ===============================================================
@@ -1032,3 +1038,9 @@ test <- test %>%
 
 saveRDS(train, file.path(dir$processed, paste0("train_clean", ".rds")))
 saveRDS(test, file.path(dir$processed, paste0("test_clean", ".rds")))
+
+
+
+
+stargazer(train, type = 'latex', out = file.path(dir$views, 'destats_train_final.tex'))
+stargazer(test, type = 'latex', out = file.path(dir$views, 'destats_test_final.tex'))
